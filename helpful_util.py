@@ -13,6 +13,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 import glob
+from collections import Counter
+
 
 import pickle
 
