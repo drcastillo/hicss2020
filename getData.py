@@ -1,12 +1,13 @@
 import sys
 import os
 import glob
-
+#test
 
 def list_dir(verbose = True):
     '''
+    function to list the contents of current working directory
     return:: list of branches
-			 dict of current working directory {idx : branch}
+	     dict of current working directory {idx : branch}
     '''
     idx = []
     contents = []
@@ -22,11 +23,9 @@ def list_dir(verbose = True):
 
 def fetch_data_path (folder = 'data'):
     '''
-    parameters:
-        folder : type String
-            'data' is default data storage
+    function to string concat holistic path to data files w/ user input
     arguments:
-        pass in string of data directory
+        pass in string of data folder
     return :: string of concatenated path to data file
     
     '''
@@ -43,4 +42,4 @@ def fetch_data_path (folder = 'data'):
             return path + "\\" + dataPath
     except:
         print("Invalid Selection")
-        return None
+return None
