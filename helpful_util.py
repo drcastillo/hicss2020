@@ -13,12 +13,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import sys
 import glob
+#pip install counter
 from collections import Counter
 
 
 import pickle
-
-
+import sklearn
+from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold, learning_curve
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Flatten, Dense, Input
@@ -200,7 +201,9 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-	
+##################################################
+# Utility code for Fetching data files from dir        
+##################################################
 def list_dir(verbose = True):
     '''
     function to list the contents of current working directory
@@ -241,4 +244,75 @@ def fetch_data_path (folder = 'data'):
     except:
         print("Invalid Selection")
     return None
+	
+##################################################
+# Utility code for detecting outliers - Tukey Method
+##################################################	
+
+def detect_outliers(df,n,features):
+    """
+    Takes a dataframe df of features and returns a list of the indices
+    corresponding to the observations containing more than n outliers according
+    to the Tukey method.
+    """
+    outlier_indices = []
+    
+    # iterate over features(columns)
+    for col in features:
+        # 1st quartile (25%)
+        Q1 = np.percentile(df[col], 25)
+        # 3rd quartile (75%)
+        Q3 = np.percentile(df[col],75)
+        # Interquartile range (IQR)
+        IQR = Q3 - Q1
+        
+        # outlier step
+        outlier_step = 1.5 * IQR
+        
+        # Determine a list of indices of outliers for feature col
+        outlier_list_col = df[(df[col] < Q1 - outlier_step) | (df[col] > Q3 + outlier_step )].index
+        
+        # append the found outlier indices for col to the list of outlier indices 
+        outlier_indices.extend(outlier_list_col)
+        
+    # select observations containing more than 2 outliers
+    outlier_indices = Counter(outlier_indices)        
+    multiple_outliers = list( k for k, v in outlier_indices.items() if v > n )
+    
+    return multiple_outliers
+	
+	
+	
+##################################################
+# Utility code for measuring model performance given dataset size 
+##################################################
+def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
+                        n_jobs=-1, train_sizes=np.linspace(.1, 1.0, 5)):
+    """Generate a simple plot of the test and training learning curve"""
+    plt.figure()
+    plt.title(title)
+    if ylim is not None:
+        plt.ylim(*ylim)
+    plt.xlabel("Training examples")
+    plt.ylabel("Score")
+    train_sizes, train_scores, test_scores = learning_curve(
+        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+    plt.grid()
+
+    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
+                     train_scores_mean + train_scores_std, alpha=0.1,
+                     color="r")
+    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
+    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
+             label="Training score")
+    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
+             label="Cross-validation score")
+
+    plt.legend(loc="best")
+    return plt
     
