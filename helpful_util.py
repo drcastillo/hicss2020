@@ -203,7 +203,7 @@ def list_dir(verbose = True):
     '''
     function to list the contents of current working directory
     return:: list of branches
-	     dict of current working directory {idx : branch}
+    dict of current working directory {idx : branch}
     '''
     idx = []
     contents = []
@@ -238,5 +238,5 @@ def fetch_data_path (folder = 'data'):
             return path + "\\" + dataPath
     except:
         print("Invalid Selection")
-	return None
+    return None
     
