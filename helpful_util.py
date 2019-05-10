@@ -245,6 +245,17 @@ def fetch_data_path (folder = 'data'):
         print("Invalid Selection")
     return None
 	
+def load_data(path = 'data', drop_outliers = True):
+    data_path = fetch_data_path(folder = path) #Using UDF to fetch data
+    cols = [("A" + str(i)) for i in range(1,16)] #Arbitrary Column Naming
+    df = pd.read_csv(data_path, header = None, delimiter= " ", names= cols) #Create DF. Reading in a .dat file with tab delimeter
+    if drop_outliers:
+        Outliers_to_drop = detect_outliers(df,1,["A2","A3","A5","A7"])
+        df = df.drop(df.index[Outliers_to_drop]) #Remove outliers based on Tukey method
+        print("Outliers Dropped")
+    print("Data Loaded into dataframe")
+    return df
+	
 ##################################################
 # Utility code for detecting outliers - Tukey Method
 ##################################################	
