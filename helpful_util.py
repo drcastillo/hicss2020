@@ -5,6 +5,7 @@
 
 
 from __future__ import print_function
+from heaton_utils import *
 
 import numpy as np
 import warnings
@@ -34,100 +35,100 @@ from keras import backend as K
 from keras.engine.topology import get_source_inputs
 from keras.models import load_model
 from keras.models import model_from_json
+from sklearn.model_selection import train_test_split
 
 
 
- 
 class KerasModelUtil:
-    
+
     modelwts_extension = "h5"
     json_extension = "json"
     pickle_extension = "p"
-            
+
 
     def save(self, model_dir, model_name, model, label_class_map):
         if model_dir.endswith('/') == False:
             model_dir = model_dir + '/'
-            
+
         # put the file name into specific tokens
         fn_base, sep, tail = model_name.partition('.')
         if not sep:
             sep = "."
 
-        json_fn = model_dir + fn_base + sep + self.json_extension 
-          
+        json_fn = model_dir + fn_base + sep + self.json_extension
+
         wt_ext = tail
         if not wt_ext:
             wt_ext = self.modelwts_extension
         wt_fn = model_dir + fn_base + sep + wt_ext
 
-        pickle_fn = model_dir + fn_base + sep + self.pickle_extension 
-        
-            
+        pickle_fn = model_dir + fn_base + sep + self.pickle_extension
+
+
         pickle.dump(label_class_map, open(pickle_fn, 'wb'))
-    
+
         # serialize model to JSON
         model_json = model.to_json()
-    
+
         with open(json_fn, "w") as json_file:
             json_file.write(model_json)
-        
+
         # serialize weights to HDF5
         model.save_weights(wt_fn)
-        
-        
 
-    def load(self, 
-             model_dir, 
+
+
+    def load(self,
+             model_dir,
              model_name,
              input_shape=(None, 224, 224, 3)):
         # Load the json model first
         if model_dir.endswith('/') == False:
             model_dir = model_dir + '/'
-        
+
         # put the file name into specific tokens
         fn_base, sep, tail = model_name.partition('.')
         if not sep:
             sep = "."
 
-        json_fn = model_dir + fn_base + sep + self.json_extension           
+        json_fn = model_dir + fn_base + sep + self.json_extension
         json_file = open(json_fn, 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-    
+
         # form the model from the json and rebuild the layers
         loaded_model = model_from_json(loaded_model_json)
         loaded_model.build(input_shape=input_shape)
-    
+
         # Load the weights
         wt_ext = tail
         if not wt_ext:
             wt_ext = self.modelwts_extension
         wt_fn = model_dir + fn_base + sep + wt_ext
         loaded_model.load_weights(wt_fn)
-                
+
         #print("Loaded model from disk")
-    
+
         # Load the labels and Class ids
-        pickle_fn = model_dir + fn_base + sep + self.pickle_extension 
+        pickle_fn = model_dir + fn_base + sep + self.pickle_extension
         label_classids = pickle.load(open(pickle_fn, "rb"))
         class_label_map = {v: k for k, v in label_classids.items()}
         #print(label_classids)
         #print(classids_labels)
-    
-        return loaded_model, class_label_map
-    
 
-    
+        return loaded_model, class_label_map
+
+
+
 ##################################################
-# Keras callbacks for plotting training model 
-# accuracy and loss            
+# Keras callbacks for plotting training model
+# accuracy and loss
 ##################################################
 from IPython.display import clear_output
 import math
 import keras
 
-class TrainingPlot(keras.callbacks.Callback):   
+class TrainingPlot(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.i = 0
         self.x = []
@@ -135,11 +136,11 @@ class TrainingPlot(keras.callbacks.Callback):
         self.val_losses = []
         self.acc = []
         self.val_acc = []
-        
+
         self.logs = []
 
     def on_epoch_end(self, epoch, logs={}):
-        
+
         self.logs.append(logs)
         self.x.append(self.i)
         self.losses.append(logs.get('loss'))
@@ -148,26 +149,26 @@ class TrainingPlot(keras.callbacks.Callback):
         self.val_acc.append(logs.get('val_acc'))
         self.i += 1
         f, (ax1, ax2) = plt.subplots(1, 2, sharex=False)
-        
+
         clear_output(wait=True)
-        
+
         ax1.set_yscale('log')
         ax1.plot(self.x, self.losses, label="training loss")
         ax1.plot(self.x, self.val_losses, label="validation loss")
         ax1.legend()
-        
+
         ax2.set_ylim(0, 1.0)
         ax2.plot(self.x, self.acc, label="training accuracy")
         ax2.plot(self.x, self.val_acc, label="validation accuracy")
         ax2.legend()
-        
+
         plt.show();
-        
-        
+
+
 ##################################################
-# Utility code for computing a Confusion Matrix           
+# Utility code for computing a Confusion Matrix
 ##################################################
-        
+
 import matplotlib.pyplot as plt #for plotting
 import itertools as it
 
@@ -201,13 +202,15 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+
 ##################################################
-# Utility code for Fetching data files from dir        
+# Utility code for Fetching data files from dir
 ##################################################
 def list_dir(verbose = True):
     '''
     function to list the contents of current working directory
-    return:: list of branches
+    Return:
+    list of branches
     dict of current working directory {idx : branch}
     '''
     idx = []
@@ -221,14 +224,14 @@ def list_dir(verbose = True):
         print("Working Dir: {}".format(cwd))
         print("Returning Contents of Working Directory..")
     return contents, dict(zip(idx, contents))
-
+#helper
 def fetch_data_path (folder = 'data'):
     '''
     function to string concat holistic path to data files w/ user input
-    arguments:
-        pass in string of data folder
-    return :: string of concatenated path to data file
-    
+    Parameters:
+        folder: str - name of data folder
+    Return:
+        string of concatenated path to data file
     '''
     cwd = os.getcwd()
     path = cwd + "\\" + folder
@@ -244,21 +247,66 @@ def fetch_data_path (folder = 'data'):
     except:
         print("Invalid Selection")
     return None
-	
-def load_data(path = 'data', drop_outliers = True):
+
+def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns = None):
+    '''
+    PARAMETERS:
+        path: string - folder where data resides
+        drop_outliers: boolean - True if dropping outliers based on Tukey method
+        columns: int - number of features in the dataframe. Used for column naming
+        outlier_columns: list - list of columns to search for outliers
+
+    RETURN:
+        Dataframe Object
+
+    EXAMPLE:
+        df = load_data(path = 'data', drop_outliers = True, columns = 15)
+
+    '''
     data_path = fetch_data_path(folder = path) #Using UDF to fetch data
-    cols = [("A" + str(i)) for i in range(1,16)] #Arbitrary Column Naming
+    cols = [("A" + str(i)) for i in range(1,columns)] #Arbitrary Column Naming
     df = pd.read_csv(data_path, header = None, delimiter= " ", names= cols) #Create DF. Reading in a .dat file with tab delimeter
+
     if drop_outliers:
-        Outliers_to_drop = detect_outliers(df,1,["A2","A3","A5","A7"])
+        Outliers_to_drop = detect_outliers(df,1,outlier_columns)
         df = df.drop(df.index[Outliers_to_drop]) #Remove outliers based on Tukey method
         print("Outliers Dropped")
     print("Data Loaded into dataframe")
     return df
-	
+
+def split_data(df, keras = False, testSize = 0.2, randomState = 123):
+    '''
+    PARAMETERS:
+		df: dataframe object
+        Keras: True if Using MLP. One hot encoding of response variable
+        testSize = split between train and test set
+        randomState = seeding
+
+    RETURN:
+        X_Train
+        X_Test
+        Y_train
+        Y_Test
+
+    EXAMPLE:
+        X_train, X_test, y_train, y_test = split_data(df = df, keras = False, testSize = 0.2, randomState = 123)
+    '''
+    if not keras:
+        X, y = df.iloc[:,:-1], df.iloc[:,-1] #Split Dependent / Independent
+        xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size = testSize,
+                                                            shuffle = True, random_state = randomState) #Train Test Split
+        return xtrain, xtest, ytrain, ytest
+    else:
+        target = df.columns[-1] #Fetch last columns name
+        X, y = to_xy(df, target)
+
+        xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size = testSize,
+                                                            shuffle = True, random_state = randomState) #Train Test Split
+        return xtrain, xtest, ytrain, ytest
+
 ##################################################
 # Utility code for detecting outliers - Tukey Method
-##################################################	
+##################################################
 
 def detect_outliers(df,n,features):
     """
@@ -267,7 +315,7 @@ def detect_outliers(df,n,features):
     to the Tukey method.
     """
     outlier_indices = []
-    
+
     # iterate over features(columns)
     for col in features:
         # 1st quartile (25%)
@@ -276,26 +324,26 @@ def detect_outliers(df,n,features):
         Q3 = np.percentile(df[col],75)
         # Interquartile range (IQR)
         IQR = Q3 - Q1
-        
+
         # outlier step
         outlier_step = 1.5 * IQR
-        
+
         # Determine a list of indices of outliers for feature col
         outlier_list_col = df[(df[col] < Q1 - outlier_step) | (df[col] > Q3 + outlier_step )].index
-        
-        # append the found outlier indices for col to the list of outlier indices 
+
+        # append the found outlier indices for col to the list of outlier indices
         outlier_indices.extend(outlier_list_col)
-        
+
     # select observations containing more than 2 outliers
-    outlier_indices = Counter(outlier_indices)        
+    outlier_indices = Counter(outlier_indices)
     multiple_outliers = list( k for k, v in outlier_indices.items() if v > n )
-    
+
     return multiple_outliers
-	
-	
-	
+
+
+
 ##################################################
-# Utility code for measuring model performance given dataset size 
+# Utility code for measuring model performance given dataset size
 ##################################################
 def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
                         n_jobs=-1, train_sizes=np.linspace(.1, 1.0, 5)):
@@ -326,4 +374,3 @@ def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
 
     plt.legend(loc="best")
     return plt
-    
