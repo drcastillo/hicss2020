@@ -250,6 +250,7 @@ def fetch_data_path (folder = 'data'):
 
 def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns = None):
     '''
+    
     PARAMETERS:
         path: string - folder where data resides
         drop_outliers: boolean - True if dropping outliers based on Tukey method
