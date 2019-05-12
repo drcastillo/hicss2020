@@ -250,7 +250,7 @@ def fetch_data_path (folder = 'data'):
 
 def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns = None):
     '''
-    
+
     PARAMETERS:
         path: string - folder where data resides
         drop_outliers: boolean - True if dropping outliers based on Tukey method
@@ -275,6 +275,19 @@ def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns
     print("Data Loaded into dataframe")
     return df
 
+def load_data_gridsearch(path = 'C:\\Users\\jdine\\Documents\\1.MachineLearning\\hicss2020-master\\data\\australian.dat',
+                        columns = 16):
+    '''
+    Function to use when utilizing Hyperas for Keras GridSearchCV
+    Returns:
+        Dataframe Object
+    Underloaded Method for loading data
+    '''
+    cols = [("A" + str(i)) for i in range(1,columns)]
+    df = pd.read_csv(path, header = None, delimiter= " ", names= cols)
+
+    return df
+
 def split_data(df, keras = False, testSize = 0.2, randomState = 123):
     '''
     PARAMETERS:
@@ -284,10 +297,8 @@ def split_data(df, keras = False, testSize = 0.2, randomState = 123):
         randomState = seeding
 
     RETURN:
-        X_Train
-        X_Test
-        Y_train
-        Y_Test
+        4 objects for model building
+        xtrain, xtest, ytrain, ytest
 
     EXAMPLE:
         X_train, X_test, y_train, y_test = split_data(df = df, keras = False, testSize = 0.2, randomState = 123)
@@ -314,6 +325,11 @@ def detect_outliers(df,n,features):
     Takes a dataframe df of features and returns a list of the indices
     corresponding to the observations containing more than n outliers according
     to the Tukey method.
+
+    Parameters:
+        df: Dataframe object
+        n: int; specifies the thresholded integer count of outliers per observation
+        features: Specify which features to search
     """
     outlier_indices = []
 
