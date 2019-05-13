@@ -24,10 +24,6 @@ from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFo
 import tensorflow as tf
 from keras.models import Model
 from keras.layers import Flatten, Dense, Input
-from keras.layers import Conv2D
-from keras.layers import MaxPooling2D
-from keras.layers import GlobalMaxPooling2D
-from keras.layers import GlobalAveragePooling2D
 from keras.preprocessing import image
 from keras.utils import layer_utils
 from keras.utils.data_utils import get_file
@@ -36,7 +32,7 @@ from keras.engine.topology import get_source_inputs
 from keras.models import load_model
 from keras.models import model_from_json
 from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import MinMaxScaler
 
 
 class KerasModelUtil:
@@ -127,7 +123,7 @@ class KerasModelUtil:
 from IPython.display import clear_output
 import math
 import keras
-
+#Can just import LiveLossPlot & add to model callbacks.
 class TrainingPlot(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.i = 0
@@ -180,6 +176,8 @@ def plot_confusion_matrix(cm, classes,
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
+
+    Note: class is a listlike parameter. Pass in list of classes, eg: ["No Loan", "Loan"]
     """
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
@@ -203,9 +201,9 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 
-##################################################
-# Utility code for Fetching data files from dir
-##################################################
+####################################################################################################
+# Utilities for Fetching data files from dir and performing various data cleaning
+####################################################################################################
 def list_dir(verbose = True):
     '''
     function to list the contents of current working directory
@@ -271,14 +269,22 @@ def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns
     if drop_outliers:
         Outliers_to_drop = detect_outliers(df,1,outlier_columns)
         df = df.drop(df.index[Outliers_to_drop]) #Remove outliers based on Tukey method
-        print("Outliers Dropped")
-    print("Data Loaded into dataframe")
     return df
 
 def load_data_gridsearch(path = 'C:\\Users\\jdine\\Documents\\1.MachineLearning\\hicss2020-master\\data\\australian.dat',
-                        columns = 16):
+                         columns = 16, outlier_columns = None, scale_columns = None):
     '''
     Function to use when utilizing Hyperas for Keras GridSearchCV
+    PARAMETERS:
+    path: str; path to data file. Default path defined for Jake's PC
+
+    drop_outliers: bool; If True, drop rows with outliers present
+
+    columns: int; number of columns including index columns
+
+    outlier_columns: list; Pass list of columns you want to search/remove outliers for
+
+    normalize_columns: list; Pass list of columns you want to normalize. We use MinMaxScaler because no features follow Gaussian Distribution
     Returns:
         Dataframe Object
     Underloaded Method for loading data
@@ -286,13 +292,24 @@ def load_data_gridsearch(path = 'C:\\Users\\jdine\\Documents\\1.MachineLearning\
     cols = [("A" + str(i)) for i in range(1,columns)]
     df = pd.read_csv(path, header = None, delimiter= " ", names= cols)
 
+    if outlier_columns:
+        Outliers_to_drop = detect_outliers(df,1,outlier_columns)
+        df = df.drop(df.index[Outliers_to_drop])
+
+    if scale_columns:
+        scaler = MinMaxScaler()
+        x= df[scale_columns]
+        df[scale_columns] = scaler.fit_transform(x)
+
     return df
 
-def split_data(df, keras = False, testSize = 0.2, randomState = 123):
+#This works the same way as Sklearn's train/test split function with addition of a binary flag
+#that allows for one hot encoding of the response variable. I
+def split_data(df, keras = False, testSize = 0.2, randomState = None):
     '''
     PARAMETERS:
 		df: dataframe object
-        Keras: True if Using MLP. One hot encoding of response variable
+        keras: True if Using MLP. One hot encoding of response variable
         testSize = split between train and test set
         randomState = seeding
 
@@ -302,6 +319,7 @@ def split_data(df, keras = False, testSize = 0.2, randomState = 123):
 
     EXAMPLE:
         X_train, X_test, y_train, y_test = split_data(df = df, keras = False, testSize = 0.2, randomState = 123)
+
     '''
     if not keras:
         X, y = df.iloc[:,:-1], df.iloc[:,-1] #Split Dependent / Independent
