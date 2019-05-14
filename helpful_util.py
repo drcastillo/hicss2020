@@ -193,7 +193,7 @@ def plot_confusion_matrix(cm, classes,
     for i, j in it.product(range(cm.shape[0]), range(cm.shape[1])):
         value = '{0:.2g}'.format(cm[i, j])
         plt.text(j, i, value,
-                 fontsize=14,
+                 fontsize=10,
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
@@ -246,7 +246,7 @@ def fetch_data_path (folder = 'data'):
         print("Invalid Selection")
     return None
 
-def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns = None):
+def load_data_australian(path = 'data', drop_outliers = True, columns = 16, outlier_columns = None):
     '''
 
     PARAMETERS:
@@ -271,6 +271,33 @@ def load_data(path = 'data', drop_outliers = True, columns = 16, outlier_columns
         df = df.drop(df.index[Outliers_to_drop]) #Remove outliers based on Tukey method
     return df
 
+def load_data_UCI(path = 'data\\adult.csv', clean = True):
+    '''
+    Fetches and cleans UCI data from path
+    '''
+    data = pd.read_csv(path)
+    if clean:
+        data = data[data.occupation != '?']
+        # create numerical columns representing the categorical data
+        data['target_above'] = np.where(data.income == '<=50K', 0, 1)
+        data['workclass_num'] = data.workclass.map({'Private':0, 'State-gov':1, 'Federal-gov':2, 'Self-emp-not-inc':3, 'Self-emp-inc':4, 'Local-gov':5, 'Without-pay':6})
+        data['marital_num'] = data['marital.status'].map({'Widowed':0, 'Divorced':1, 'Separated':2, 'Never-married':3, 'Married-civ-spouse':4, 'Married-AF-spouse':4, 'Married-spouse-absent':5})
+        data['race_num'] = data.race.map({'White':0, 'Black':1, 'Asian-Pac-Islander':2, 'Amer-Indian-Eskimo':3, 'Other':4})
+        data['sex_num'] = np.where(data.sex == 'Female', 0, 1)
+        data['relative_num'] = data.relationship.map({'Not-in-family':0, 'Unmarried':0, 'Own-child':0, 'Other-relative':0, 'Husband':1, 'Wife':1})
+        #data['education_num'] = data.education.map({'1st-4th':0, 'Preschool':0, '5th-6th':0, '12th':0, '9th ':0, '7th-8th':0,
+        #'10th':0, '11th':0, 'HS-grad':1, 'Some-college':2, 'Assoc-voc':3, 'Assoc-acdm':3, 'Bachelors':4, 'Masters':5, 'Doctorate':6, 'Prof-school':6, })
+        data[['Male', 'Female']] = pd.get_dummies(data.sex_num)
+        del data['sex_num']
+        data[['relationship_no', 'relationship_yes']] = pd.get_dummies(data.relative_num)
+        del data['relative_num']
+
+        df = data[['workclass_num', 'education.num', 'marital_num', 'race_num', 'Male', 'Female', 'relationship_no', 'relationship_yes', 'capital.gain', 'capital.loss', 'target_above']]
+        return df
+    else:
+        return data
+
+#Only use for Australian Data
 def load_data_gridsearch(path = 'C:\\Users\\jdine\\Documents\\1.MachineLearning\\hicss2020-master\\data\\australian.dat',
                          columns = 16, outlier_columns = None, scale_columns = None):
     '''
@@ -323,11 +350,14 @@ def split_data(df, keras = False, testSize = 0.2, randomState = None):
     '''
     if not keras:
         X, y = df.iloc[:,:-1], df.iloc[:,-1] #Split Dependent / Independent
-        xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size = testSize,
+        xtrain, xtest, ytrain, ytest = train_test_split(X, y, stratify = y, test_size = testSize,
                                                             shuffle = True, random_state = randomState) #Train Test Split
         return xtrain, xtest, ytrain, ytest
     else:
-        target = df.columns[-1] #Fetch last columns name
+        if target:
+            target = df[target]
+        else:
+            target = df.columns[-1] #Fetch last columns name
         X, y = to_xy(df, target)
 
         xtrain, xtest, ytrain, ytest = train_test_split(X, y, test_size = testSize,
