@@ -282,7 +282,7 @@ def load_data_australian(
 
     return df
 
-####
+###
 def load_data_UCI(path='data\\adult.csv', clean=True, down_sample = False, up_sample = False, get_dummies = True):
     '''
     Fetches and cleans UCI data from path
