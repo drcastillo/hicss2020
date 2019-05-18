@@ -73,7 +73,7 @@ class GAM:
 
         return np.abs(attributions) / total
 
-    def _cluster(self, distance_function=spearman_squared_distance, max_iter=1000, tol=0.0001):
+    def _cluster(self, distance_function=spearman_squared_distance, max_iter=50, tol=0.01):
         """Calls kmedoids module to group attributions"""
         clusters = KMedoids(self.k, dist_func=distance_function, max_iter=max_iter, tol=tol)
         clusters.fit(self.normalized_attributions, verbose=False)
@@ -117,7 +117,7 @@ class GAM:
     def plot(self, num_features=5, output_path_base=None, display=True):
         """Shows bar graph of feature importance per global explanation
         ## TODO: Move this function to a seperate module
-        
+
         Args:
             num_features: number of top features to plot, int
             output_path_base: path to store plots
