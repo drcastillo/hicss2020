@@ -5,7 +5,7 @@ Created on Wed May  9 16:22:31 2018
 @author: jeff heaton
 """
 from sklearn import preprocessing
-import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pandas as pd
 import shutil
