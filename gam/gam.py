@@ -73,7 +73,7 @@ class GAM:
 
         return np.abs(attributions) / total
 
-    def _cluster(self, distance_function=spearman_squared_distance, max_iter=50, tol=0.01):
+    def _cluster(self, distance_function=spearman_squared_distance, max_iter=250, tol=0.001):
         """Calls kmedoids module to group attributions"""
         clusters = KMedoids(self.k, dist_func=distance_function, max_iter=max_iter, tol=tol)
         clusters.fit(self.normalized_attributions, verbose=False)
