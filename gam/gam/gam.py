@@ -13,8 +13,8 @@ from collections import Counter
 import numpy as np
 import matplotlib.pylab as plt
 
-from gam.clustering import KMedoids
-from gam.spearman_distance import spearman_squared_distance
+from gam.gam.clustering import KMedoids
+from gam.gam.spearman_distance import spearman_squared_distance
 
 
 class GAM:
