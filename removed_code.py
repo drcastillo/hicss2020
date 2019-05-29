@@ -1,28 +1,30 @@
 #Local Explainability
 
 #Only need to run this once. Pickled all Shap values.
-#def get_shap_values(model):
-#    if type(model) == keras.engine.training.Model:
-#        f = lambda x: model.predict(x)[:, 1]
-#    else:
-#        f = lambda x: model.predict_proba(x)[:, 1]
-#    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
-#    explainer = shap.KernelExplainer(f, med)
-#    shap_values = explainer.shap_values(X_test_shap, samples =50)
-#    return shap_values
+def get_shap_values(model):
+    if type(model) == keras.engine.training.Model:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    shap_values = explainer.shap_values(X_test_shap, samples =500)
+    return shap_values
 
 
-#rfc_shap_values = get_shap_values(rfc)
-#gbc_shap_values = get_shap_values(gbc)
-#logit_shap_values = get_shap_values(logit)
-#sk_ann_shap_values = get_shap_values(sk_ann)
-#keras_ann_shap_values = get_shap_values(keras_ann)
+rfc_shap_values = get_shap_values(rfc)
+gbc_shap_values = get_shap_values(gbc)
+logit_shap_values = get_shap_values(logit)
+sk_ann_shap_values = get_shap_values(sk_ann)
+keras_ann_shap_values = get_shap_values(keras_ann)
 
-#shap_values = {'rfc' : rfc_shap_values, 'gbc' : gbc_shap_values, 'logit' : logit_shap_values,
-#'sklearn_ann' : sk_ann_shap_values, 'keras_ann' : keras_ann_shap_values}
+shap_values = {str(type(rfc)) : rfc_shap_values,
+               str(type(gbc)) : gbc_shap_values,
+               str(type(logit)) : logit_shap_values,
+str(type(sk_ann)) : sk_ann_shap_values,
+               str(type(keras_ann)) : keras_ann_shap_values}
 
-#save_obj(shap_values, 'shap_values')
-#shap_values
+save_obj(shap_values, 'shap_values')
 
 
 #def get_base_values(model):
