@@ -420,173 +420,6 @@ def plot_learning_curve(estimator,
 
 
 
-def perturb_graph(model, mode, data, y_labs, column, title = 'Label with Model Type: GBC/RFC/etc..'):
-    '''
-    Parameters:
-        model: object,
-            Random Forest: rfc
-            Gradient Boosted Classifier: gbc
-            Logistic Regression: logit
-        mode: str;
-            'accuracy' : Y Axis = Percent of Correct Predictions
-            'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
-        data: df object
-        column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
-        title: str; pass title of graph
-
-    Returns:
-        Forecasting Graph based on perturbed features.
-
-    '''
-    import collections
-    clone = data.copy()
-    column = column
-
-    #base_value = model.predict_proba(clone.median().values.reshape(
-    #    (1, clone.shape[1])))[:, 1] * 100
-
-    a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
-    b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
-    pertu = dict(zip(a, b))
-    pert = [i for i in pertu.values()]
-
-    preds = []
-    mean = []
-    num_of_1s = []
-    for i in pert:
-        clone[column] = data[column] * (i)
-        mean.append(str(column) + ':' + str(np.round(clone[column].mean())))
-        #preds.append(
-        #    model.predict_proba(clone.median().values.reshape(
-        #        (1, clone.shape[1])))[:, 1][0] * 100)
-        preds.append(
-            sklearn.metrics.accuracy_score(y_labs, model.predict(clone))* 100)
-        num_of_1s.append((collections.Counter(model.predict(clone))[1] / y_labs.shape[0]) *100)
-
-    fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
-    if 'accuracy' in mode:
-        sns.lineplot(x=pert, y=preds, ax=ax1)
-        ax1.set_ylabel('Accuracy %', fontsize=15)
-        ax1.set_title('Accuracy {}: {}'.format(
-        column.upper(), title),
-                  fontsize=25)
-        ax1.set_ylim(50,100)
-    elif 'proportion' in mode:
-        sns.lineplot(x=pert, y=num_of_1s, ax=ax1)
-        ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-        ax1.set_title('Proportionality of Predictions {}: {}'.format(
-        column.upper(), title),
-                  fontsize=25)
-        ax1.set_ylim(0,80)
-    #ax1.axhline(base_value, ls='--', color='k')
-    #ax1.axhline(50, ls='--', color='r')
-    #ax1.axvline(1.0, ls='--', color='k')
-    #ax1.text(.5,.72, "Base Value - Prediction over Median ", fontsize=13)
-    ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
-    plt.legend(title='Legend',
-               loc='lower right',
-               labels=[
-                   'Perturbed - Probability'
-
-               ])
-
-    if isinstance(column, str):
-        for i, txt in enumerate(mean):
-            if i % 5 == 0:
-                if 'accuracy' in mode:
-                    ax1.annotate(txt, (pert[i], preds[i]))
-                if 'proportion' in mode:
-                    ax1.annotate(txt, (pert[i], num_of_1s[i]))
-
-def perturb_graph_cons(data, set, y_labs, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
-    import collections
-    '''
-    Parameters:
-        data: df object
-        set: str;
-            'lendingclub' - load lending club models
-            'uci' - load uci models
-        y_labs; df: pass in y_test set
-        mode: str;
-            'accuracy' : Y Axis = Percent of Correct Predictions
-            'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
-        column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
-        title: str; pass title of graph
-
-    Returns:
-        Perturbed Input Graph. Shows all models simultaneously, as opposed to the above
-
-    '''
-    if 'uci' in set:
-        rfc, gbc, logit, keras_ann, sk_ann = load_models_uci()
-    else:
-        rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
-    clone = data.copy()
-    column = column
-
-
-    a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
-    b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
-    pertu = dict(zip(a, b))
-    pert = [i for i in pertu.values()]
-
-    rfc_preds = []
-    gbc_preds = []
-    logit_preds = []
-
-    rfc_1_preds =[]
-    gbc_1_preds =[]
-    logit_1_preds =[]
-
-    for i in pert:
-        clone[column] = data[column] * (i)
-        #rfc_preds.append(
-        #    rfc.predict_proba(clone.median().values.reshape(
-        #        (1, clone.shape[1])))[:, 1][0] * 100)
-        #gbc_preds.append(
-        #    gbc.predict_proba(clone.median().values.reshape(
-        #        (1, clone.shape[1])))[:, 1][0] * 100)
-        #logit_preds.append(
-        #    logit.predict_proba(clone.median().values.reshape(
-        #        (1, clone.shape[1])))[:, 1][0] * 100)
-        rfc_preds.append(sklearn.metrics.accuracy_score(y_labs, rfc.predict(clone))*100)
-        gbc_preds.append(sklearn.metrics.accuracy_score(y_labs, gbc.predict(clone))*100)
-        logit_preds.append(sklearn.metrics.accuracy_score(y_labs, logit.predict(clone))*100)
-        rfc_1_preds.append((collections.Counter(rfc.predict(clone))[1] / y_labs.shape[0]) *100)
-        gbc_1_preds.append((collections.Counter(gbc.predict(clone))[1] / y_labs.shape[0]) *100)
-        logit_1_preds.append((collections.Counter(logit.predict(clone))[1] / y_labs.shape[0]) *100)
-
-    fig, ax1 = plt.subplots(1, 1, figsize=(17, 4))
-    if 'accuracy' in mode:
-        sns.lineplot(x=pert, y=rfc_preds, ax=ax1)
-        sns.lineplot(x=pert, y=gbc_preds, ax=ax1)
-        sns.lineplot(x=pert, y=logit_preds, ax=ax1)
-        ax1.set_ylabel('Accuracy %', fontsize=15)
-        ax1.set_title('Accuracy {}: {}'.format(
-        column.upper(), title),
-                  fontsize=25)
-        ax1.set_ylim(0,100)
-
-    elif 'proportion' in mode:
-        sns.lineplot(x=pert, y=rfc_1_preds, ax=ax1)
-        sns.lineplot(x=pert, y=gbc_1_preds, ax=ax1)
-        sns.lineplot(x=pert, y=logit_1_preds, ax=ax1)
-        ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-        ax1.set_title('Proportionality of Predictions {}: {}'.format(
-        column.upper(), title),
-                  fontsize=25)
-        ax1.set_ylim(0,100)
-
-    #ax1.axhline(base_value, ls='--',color = 'r')
-    #ax1.text(.5,.72, "Base Value - Prediction over mean ", fontsize=13)
-    ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
-    plt.legend(title='Model',
-               loc='upper left',
-               labels=[
-                   'Random Forest', 'Gradient Boosted Classifier',
-                   'Logistic Regression'
-               ])
-
 def display_sklearn_feature_importance(data, set, features, n_features):
     '''
     Parameters:
@@ -640,51 +473,6 @@ def display_sklearn_feature_importance(data, set, features, n_features):
         int(n_features / 2)))
     plt.show()
 
-def manual_perturb(X, y, set, column, scalar):
-    '''
-    Parameters
-        X: X test DataFrame
-        y: y test Dataframe
-        set: str;
-            'lendingclub' - load lending club models
-            'uci' - load uci models
-        column: str; feature of interest
-        scalar: float; multiplier
-    Returns:
-        To String
-    '''
-    import collections
-    if 'uci' in set:
-        rfc, gbc, logit, keras_ann, sk_ann = load_models_uci()
-    else:
-        rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
-    temp = X.copy()
-    temp[column] = temp[column] * scalar
-    print("Perturbing Feature: {} by {}".format(column,scalar))
-    print("Random Forest")
-    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, rfc.predict(X))))
-    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, rfc.predict(temp))))
-    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(rfc.predict(X))[1]))
-    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(rfc.predict(temp))[1]))
-
-
-    print("\nGradient Boosted Classifier")
-    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, gbc.predict(X))))
-    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, gbc.predict(temp))))
-    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(gbc.predict(X))[1]))
-    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(gbc.predict(temp))[1]))
-
-    print("\nLogistic Regression")
-    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, logit.predict(X))))
-    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, logit.predict(temp))))
-    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(logit.predict(X))[1]))
-    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(logit.predict(temp))[1]))
-
-    print("\nNeural Net")
-    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, keras_ann.predict_classes(X))))
-    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, keras_ann.predict_classes(temp))))
-    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(keras_ann.predict_classes(X))[1]))
-    print("Number of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(keras_ann.predict_classes(temp))[1]))
 
 def get_shap_values(model):
     if type(model) == keras.engine.training.Model:
@@ -788,92 +576,324 @@ def get_shap_values(model):
 #save_obj(attributions_elrp, 'attributions_elrp')
 #save_obj(attributions_sv, 'attributions_sv')
 
-def shap_local_graph(model, train, observation):
-    '''
-    Parameters:
+class ExplainShap():
+
+    def __init__(self, train, test, model_dict, feature_names, class_names = ['Bad Loan', 'Good Loan']):
+        '''
+        Parameters:
+            shap_values: dict;
+                locally generated shap values. Stored as local variable = shap_values
+            train: df;
+                X_train_shap is the df that needs to be passed in here.
+            test: df;
+                X_test_shap is the df that needs to be passed in here.
+            model_dict: dict;
+                pass in dict == models. This stores model names and shap Values
+            feature_names: list;
+                This stores a list of all features in the necessary order (Unravels the OHE during preprocessing)
+            class_names: list;
+                list of both classes
+
+        Example:
+            plot = ExplainShap(X_train_shap, X_test_shap, models, features, class_names = ['Bad Loan', 'Good Loan'])
+            plot.shap_local_graph(model=keras_ann, observation=1)
+        '''
+        self.train = train
+        self.test = test
+        self.model_dict = model_dict
+        self.feature_names = feature_names
+        self.class_names = class_names
+
+    def shap_local_graph(self, model, observation):
+        '''
+        Parameters:
+            model: object,
+                Random Forest: rfc
+                Gradient Boosted Classifier: gbc
+                Logistic Regression: logit
+                Keras Neural Network = keras_ann
+                Sklearn Neural Network = sk_ann
+            observation: int
+
+        Returns:
+            Local Shap Explanation
+
+        '''
+        import shap
+        #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
+        if type(model) ==keras.engine.sequential.Sequential:
+            f = lambda x: model.predict(x)[:, 1]
+        else:
+            f = lambda x: model.predict_proba(x)[:, 1]
+        #We use the median as a proxy for computational efficiency. Rather than getting the expected value over the whole
+        #training distribution, we get E(f(x)) over the median of the training set, e.g., model.predict(median(xi))
+        med = self.train.median().values.reshape((1, self.train.shape[1]))
+        explainer = shap.KernelExplainer(f, med)
+        print("{} Shap Values".format(self.model_dict[str(type(model))][0]))
+
+        return shap.force_plot(
+            explainer.
+            expected_value,  #Expected value is the base value - E(mean(f(x)))
+            self.model_dict[str(type(model))][1][observation],
+            feature_names=self.feature_names)
+
+
+    #plot_cmap=['#808080', '#0000FF']
+    def shap_many_graph(self, model):
+        '''
+        Parameters:
         model: object,
             Random Forest: rfc
             Gradient Boosted Classifier: gbc
             Logistic Regression: logit
             Keras Neural Network = keras_ann
             Sklearn Neural Network = sk_ann
-        train: object; train set dataframe
-        observation: int
+        Returns:
+        Global Shap Explanations over test set
 
-    Returns:
-        Local Shap Explanation
+        '''
+        import shap
+        #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
+        if type(model) == keras.engine.sequential.Sequential:
+            f = lambda x: model.predict(x)[:, 1]
+        else:
+            f = lambda x: model.predict_proba(x)[:, 1]
+        med = self.train.median().values.reshape((1, self.train.shape[1]))
+        explainer = shap.KernelExplainer(f, med)
+        return shap.force_plot(explainer.expected_value, self.model_dict[str(type(model))][1],
+                               self.test)
 
-    '''
-    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
-    if type(model) ==keras.engine.sequential.Sequential:
-        f = lambda x: model.predict(x)[:, 1]
-    else:
-        f = lambda x: model.predict_proba(x)[:, 1]
-    #We use the median as a proxy for computational efficiency. Rather than getting the expected value over the whole
-    #training distribution, we get E(f(x)) over the median of the training set, e.g., model.predict(median(xi))
-    med = train.median().values.reshape((1, train.shape[1]))
-    explainer = shap.KernelExplainer(f, med)
-    print("{} Shap Values".format(models[str(type(model))][0]))
-
-    return shap.force_plot(
-        explainer.
-        expected_value,  #Expected value is the base value - E(mean(f(x)))
-        models[str(type(model))][1][observation],
-        feature_names=features)
-
-
-#plot_cmap=['#808080', '#0000FF']
-def shap_many_graph(model, train, test):
-    '''
-    Parameters:
-    model: object,
-        Random Forest: rfc
-        Gradient Boosted Classifier: gbc
-        Logistic Regression: logit
-        Keras Neural Network = keras_ann
-        Sklearn Neural Network = sk_ann
-    train: object; train set dataframe
-    test: object; test set dataframe
-
-
-    Returns:
-    Global Shap Explanations over test set
-
-    '''
-    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
-    if type(model) == keras.engine.sequential.Sequential:
-        f = lambda x: model.predict(x)[:, 1]
-    else:
-        f = lambda x: model.predict_proba(x)[:, 1]
-    med = train.median().values.reshape((1, train.shape[1]))
-    explainer = shap.KernelExplainer(f, med)
-    return shap.force_plot(explainer.expected_value, models[str(type(model))][1],
-                           test)
-
-def shap_summary_graph(model, train, test):
-    '''
-    Parameters:
-        model: object,
-            Random Forest: rfc
-            Gradient Boosted Classifier: gbc
-            Logistic Regression: logit
-            Keras Neural Network = keras_ann
-            Sklearn Neural Network = sk_ann
-        train: object; train set dataframe
-        test: object; test set dataframe
+    def shap_summary_graph(self, model):
+        '''
+        Parameters:
+            model: object,
+                Random Forest: rfc
+                Gradient Boosted Classifier: gbc
+                Logistic Regression: logit
+                Keras Neural Network = keras_ann
+                Sklearn Neural Network = sk_ann
+        Returns:
+        Global Shap Explanations over test set - Summary
+        '''
+        import shap
+        if type(model) == keras.engine.sequential.Sequential:
+            f = lambda x: model.predict(x)[:, 1]
+        else:
+            f = lambda x: model.predict_proba(x)[:, 1]
+        med = self.train.median().values.reshape((1, self.train.shape[1]))
+        explainer = shap.KernelExplainer(f, med)
+        print("{} Shap Values".format(self.model_dict[str(type(model))][0]))
+        return shap.summary_plot(self.model_dict[str(type(model))][1],
+                                 self.test,
+                                 class_names=self.class_names,
+                                 plot_type="dot")
 
 
-    Returns:
-    Global Shap Explanations over test set - Summary
-    '''
-    if type(model) == keras.engine.sequential.Sequential:
-        f = lambda x: model.predict(x)[:, 1]
-    else:
-        f = lambda x: model.predict_proba(x)[:, 1]
-    med = train.median().values.reshape((1, train.shape[1]))
-    explainer = shap.KernelExplainer(f, med)
-    print("{} Shap Values".format(models[str(type(model))][0]))
-    return shap.summary_plot(models[str(type(model))][1],
-                             test,
-                             class_names=class_names,
-                             plot_type="dot")
+class Perturb():
+    def __init__(self, X, y, data_str):
+        '''
+        Parameters:
+            X: df;
+                pass in X_test_holdout dataframe
+            y: df;
+                pass in y_test_holdout dataframe
+            data_str: str;
+                'uci' if using census data, 'lending' if using lending club data
+        Example:
+            p = Perturb(X_test_holdout, y_test_holdout, data_str= 'uci')
+            p.manual_perturb(column='age',scalar=1.1)
+        '''
+        self.X = X
+        self.y = y
+        self.data = data_str
+
+        self.a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
+        self.b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
+        self.pertu = dict(zip(self.a, self.b))
+        self.pert = [i for i in self.pertu.values()]
+
+        from helpful_util import load_models_lendingclub, load_models_uci
+        if 'uci' in self.data:
+            self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_uci()
+        elif 'lending' in self.data:
+            self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_lendingclub()
+
+    def perturb_graph(self, model, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+        '''
+        Parameters:
+            model: object,
+                Random Forest: rfc
+                Gradient Boosted Classifier: gbc
+                Logistic Regression: logit
+            column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
+            title: str; pass title of graph
+
+        Returns:
+            Forecasting Graph based on perturbed features.
+
+        '''
+        import collections
+        import sklearn
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        clone = self.X.copy()
+        column = column
+
+
+        preds = []
+        mean = []
+        num_of_1s = []
+        for i in self.pert:
+            clone[column] = self.X[column] * (i)
+            mean.append(str(column) + ':' + str(np.round(clone[column].mean())))
+
+            preds.append(
+                sklearn.metrics.accuracy_score(self.y, model.predict(clone))* 100)
+
+            num_of_1s.append((collections.Counter(model.predict(clone))[1] / self.y.shape[0]) *100)
+
+        fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
+        if 'accuracy' in mode:
+            sns.lineplot(x=self.pert, y=preds, ax=ax1)
+            ax1.set_ylabel('Accuracy %', fontsize=15)
+            ax1.set_title('Accuracy {}: {}'.format(
+            column.upper(), title),
+                      fontsize=25)
+            ax1.set_ylim(50,100)
+        elif 'proportion' in mode:
+            sns.lineplot(x=self.pert, y=num_of_1s, ax=ax1)
+            ax1.set_ylabel('% of Predictions == 1', fontsize=15)
+            ax1.set_title('Proportionality of Predictions {}: {}'.format(
+            column.upper(), title),
+                      fontsize=25)
+            ax1.set_ylim(0,80)
+
+        ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
+        plt.legend(title='Legend',
+                   loc='lower right',
+                   labels=[
+                       'Perturbed - Probability'
+
+                   ])
+
+        if isinstance(column, str):
+            for i, txt in enumerate(mean):
+                if i % 5 == 0:
+                    if 'accuracy' in mode:
+                        ax1.annotate(txt, (self.pert[i], preds[i]))
+                    if 'proportion' in mode:
+                        ax1.annotate(txt, (self.pert[i], num_of_1s[i]))
+
+    def perturb_graph_cons(self, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+        import collections
+        import sklearn
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        '''
+        Parameters:
+            mode: str;
+                'accuracy' : Y Axis = Percent of Correct Predictions
+                'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
+            column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
+            title: str; pass title of graph
+
+        Returns:
+            Perturbed Input Graph. Shows all models simultaneously, as opposed to the above
+
+        '''
+
+        clone = self.X.copy()
+        column = column
+
+
+        rfc_preds = []
+        gbc_preds = []
+        logit_preds = []
+
+        rfc_1_preds =[]
+        gbc_1_preds =[]
+        logit_1_preds =[]
+
+        for i in self.pert:
+            clone[column] = self.X[column] * (i)
+
+            rfc_preds.append(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(clone))*100)
+            gbc_preds.append(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(clone))*100)
+            logit_preds.append(sklearn.metrics.accuracy_score(self.y, self.logit.predict(clone))*100)
+
+            rfc_1_preds.append((collections.Counter(self.rfc.predict(clone))[1] / self.y.shape[0]) *100)
+            gbc_1_preds.append((collections.Counter(self.gbc.predict(clone))[1] / self.y.shape[0]) *100)
+            logit_1_preds.append((collections.Counter(self.logit.predict(clone))[1] / self.y.shape[0]) *100)
+
+        fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
+        if 'accuracy' in mode:
+            sns.lineplot(x=self.pert, y=rfc_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=gbc_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=logit_preds, ax=ax1)
+            ax1.set_ylabel('Accuracy %', fontsize=15)
+            ax1.set_title('Accuracy {}: {}'.format(
+            column.upper(), title),
+                      fontsize=25)
+            ax1.set_ylim(0,100)
+
+        elif 'proportion' in mode:
+            sns.lineplot(x=self.pert, y=rfc_1_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=gbc_1_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=logit_1_preds, ax=ax1)
+            ax1.set_ylabel('% of Predictions == 1', fontsize=15)
+            ax1.set_title('Proportionality of Predictions {}: {}'.format(
+            column.upper(), title),
+                      fontsize=25)
+            ax1.set_ylim(0,100)
+
+
+        ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
+        plt.legend(title='Model',
+                   loc='upper left',
+                   labels=[
+                       'Random Forest', 'Gradient Boosted Classifier',
+                       'Logistic Regression'
+                   ])
+
+    def manual_perturb(self, column, scalar):
+        '''
+        Parameters
+            X: X test DataFrame
+            y: y test Dataframe
+            set: str;
+                'lendingclub' - load lending club models
+                'uci' - load uci models
+            column: str; feature of interest
+            scalar: float; multiplier
+        Returns:
+            To String
+        '''
+        import collections
+        import sklearn
+        temp = self.X.copy()
+        temp[column] = temp[column] * scalar
+        print("Perturbing Feature: {} by {}".format(column,scalar))
+        print("Random Forest")
+        print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(self.X))))
+        print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(temp))))
+        print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.rfc.predict(self.X))[1]))
+        print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.rfc.predict(temp))[1]))
+
+
+        print("\nGradient Boosted Classifier")
+        print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(self.X))))
+        print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(temp))))
+        print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.gbc.predict(self.X))[1]))
+        print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.gbc.predict(temp))[1]))
+
+        print("\nLogistic Regression")
+        print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.logit.predict(self.X))))
+        print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.logit.predict(temp))))
+        print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.logit.predict(self.X))[1]))
+        print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.logit.predict(temp))[1]))
+
+        print("\nNeural Net")
+        print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(self.X))))
+        print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(temp))))
+        print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.keras_ann.predict_classes(self.X))[1]))
+        print("Number of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(self.keras_ann.predict_classes(temp))[1]))
