@@ -787,3 +787,93 @@ def get_shap_values(model):
 #save_obj(attributions_sal, 'attributions_sal')
 #save_obj(attributions_elrp, 'attributions_elrp')
 #save_obj(attributions_sv, 'attributions_sv')
+
+def shap_local_graph(model, train, observation):
+    '''
+    Parameters:
+        model: object,
+            Random Forest: rfc
+            Gradient Boosted Classifier: gbc
+            Logistic Regression: logit
+            Keras Neural Network = keras_ann
+            Sklearn Neural Network = sk_ann
+        train: object; train set dataframe
+        observation: int
+
+    Returns:
+        Local Shap Explanation
+
+    '''
+    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
+    if type(model) ==keras.engine.sequential.Sequential:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    #We use the median as a proxy for computational efficiency. Rather than getting the expected value over the whole
+    #training distribution, we get E(f(x)) over the median of the training set, e.g., model.predict(median(xi))
+    med = train.median().values.reshape((1, train.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    print("{} Shap Values".format(models[str(type(model))][0]))
+
+    return shap.force_plot(
+        explainer.
+        expected_value,  #Expected value is the base value - E(mean(f(x)))
+        models[str(type(model))][1][observation],
+        feature_names=features)
+
+
+#plot_cmap=['#808080', '#0000FF']
+def shap_many_graph(model, train, test):
+    '''
+    Parameters:
+    model: object,
+        Random Forest: rfc
+        Gradient Boosted Classifier: gbc
+        Logistic Regression: logit
+        Keras Neural Network = keras_ann
+        Sklearn Neural Network = sk_ann
+    train: object; train set dataframe
+    test: object; test set dataframe
+
+
+    Returns:
+    Global Shap Explanations over test set
+
+    '''
+    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
+    if type(model) == keras.engine.sequential.Sequential:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    med = train.median().values.reshape((1, train.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    return shap.force_plot(explainer.expected_value, models[str(type(model))][1],
+                           test)
+
+def shap_summary_graph(model, train, test):
+    '''
+    Parameters:
+        model: object,
+            Random Forest: rfc
+            Gradient Boosted Classifier: gbc
+            Logistic Regression: logit
+            Keras Neural Network = keras_ann
+            Sklearn Neural Network = sk_ann
+        train: object; train set dataframe
+        test: object; test set dataframe
+
+
+    Returns:
+    Global Shap Explanations over test set - Summary
+    '''
+    if type(model) == keras.engine.sequential.Sequential:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    med = train.median().values.reshape((1, train.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    print("{} Shap Values".format(models[str(type(model))][0]))
+    return shap.summary_plot(models[str(type(model))][1],
+                             test,
+                             class_names=class_names,
+                             plot_type="dot")
