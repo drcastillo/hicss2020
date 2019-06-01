@@ -32,6 +32,39 @@ from keras.models import model_from_json
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import resample
+import seaborn as sns
+
+def load_models_lendingclub():
+    from sklearn.externals import joblib
+    from keras.models import load_model
+    rf_file = "models/LendingClub/random_forest.pkl"
+    gbc_file = "models/LendingClub/GBC.pkl"
+    logit_file = "models/LendingClub/Logit.pkl"
+    sklearn_nn_file = "models/LendingClub/SklearnNeuralNet.pkl"
+    keras_ann_file = "models/LendingClub/ann_deepexplain.h5"
+
+    rfc = joblib.load(rf_file)
+    gbc = joblib.load(gbc_file)
+    logit = joblib.load(logit_file)
+    keras_ann = load_model(keras_ann_file)
+    sk_ann = joblib.load(sklearn_nn_file)
+    return rfc, gbc, logit, keras_ann, sk_ann
+
+def load_models_uci():
+    from sklearn.externals import joblib
+    from keras.models import load_model
+    sklearn_nn_file = 'models/UCI_Census/SklearnNeuralNet.pkl'
+    keras_ann_file = 'models/UCI_Census/ann_deepexplain.h5'
+    rf_file = "models/UCI_Census/random_forest.pkl"
+    gbc_file = "models/UCI_Census/GBC.pkl"
+    logit_file = "models/UCI_Census/Logit.pkl"
+
+    rfc = joblib.load(rf_file)
+    gbc = joblib.load(gbc_file)
+    logit = joblib.load(logit_file)
+    keras_ann = load_model(keras_ann_file)
+    sk_ann = joblib.load(sklearn_nn_file)
+    return rfc, gbc, logit, keras_ann, sk_ann
 
 class KerasModelUtil:
 
@@ -247,162 +280,7 @@ def fetch_data_path(folder='data'):
 ####################################################################################################
 # Utilities for Loading various data sets into memory w/ some cleaning
 ####################################################################################################
-#Only use for Australian Data
-def load_data_australian(
-        path='data\\australian.dat',
-        outlier_columns=None,
-        scale_columns=None):
-    '''
-    Function to use when utilizing Hyperas for Keras GridSearchCV
-    PARAMETERS:
-    path: str; path to data file. Default path defined for Jake's PC
 
-    drop_outliers: bool; If True, drop rows with outliers present
-
-    outlier_columns: list; Pass list of columns you want to search/remove outliers for
-
-    scale_columns: list; Pass list of columns you want to normalize. We use MinMaxScaler because no features follow Gaussian Distribution
-    Returns:
-        Dataframe Object
-    Underloaded Method for loading data
-    '''
-    df = pd.read_csv(path, header=None, delimiter=" ")
-    columns = len(data1.columns) + 1
-    cols = [("A" + str(i)) for i in range(1, columns)]
-    df.columns = cols
-
-    if outlier_columns:
-        Outliers_to_drop = detect_outliers(df, 1, outlier_columns)
-        df = df.drop(df.index[Outliers_to_drop])
-
-    if scale_columns:
-        scaler = MinMaxScaler()
-        x = df[scale_columns]
-        df[scale_columns] = scaler.fit_transform(x)
-
-    return df
-
-###
-def load_data_UCI(path='data\\adult.csv', clean=True, down_sample = False, up_sample = False, get_dummies = True):
-    '''
-    Fetches and cleans UCI data from path
-    '''
-    data = pd.read_csv(path)
-    if clean:
-        data = data[data.occupation != '?']
-        # create numerical columns representing the categorical data
-        data['target_above'] = np.where(data.income == '<=50K', 0, 1)
-        data['workclass_num'] = data.workclass.map({
-            'Private': 0,
-            'State-gov': 1,
-            'Federal-gov': 2,
-            'Self-emp-not-inc': 3,
-            'Self-emp-inc': 4,
-            'Local-gov': 5,
-            'Without-pay': 6
-        })
-        data['marital_num'] = data['marital.status'].map({
-            'Widowed':
-            0,
-            'Divorced':
-            0,
-            'Separated':
-            0,
-            'Never-married':
-            0,
-            'Married-civ-spouse':
-            1,
-            'Married-AF-spouse':
-            1,
-            'Married-spouse-absent':
-            1
-        })
-        data['race_num'] = data.race.map({
-            'White': 0,
-            'Black': 1,
-            'Asian-Pac-Islander': 2,
-            'Amer-Indian-Eskimo': 3,
-            'Other': 4
-        })
-        data['sex_num'] = data.sex.map({
-            'Female': 0,
-            'Male': 1,
-        })
-        data['relative_num'] = data.relationship.map({
-            'Not-in-family': 0,
-            'Unmarried': 0,
-            'Own-child': 0,
-            'Other-relative': 0,
-            'Husband': 1,
-            'Wife': 1
-        })
-        data['native.country'] = data['native.country'].replace('?',np.nan)
-        data.dropna(how='any',inplace=True)
-        data['native.country']= np.where(data['native.country'] == 'United-States', 1,0)
-
-        if down_sample:
-            df_majority = data[data.income=='<=50K']
-            df_minority = data[data.income=='>50K']
-            df_majority_downsampled = sklearn.utils.resample(df_majority,
-                                 replace=False,    # sample without replacement
-                                 n_samples=len(df_minority),     # to match minority class
-                                 random_state=123) # reproducible results
-            data = pd.concat([df_majority_downsampled, df_minority])
-        if up_sample:
-            df_majority = data[data.income=='<=50K']
-            df_minority = data[data.income=='>50K']
-            df_minority_upsampled = sklearn.utils.resample(df_minority,
-                                             replace=True,    # sample without replacement
-                                             n_samples=len(df_majority),     # to match minority class
-                                             random_state=123) # reproducible results
-            data = pd.concat([df_majority, df_minority_upsampled])
-        if get_dummies:
-            dummy_cols = ['workclass_num', 'native.country', 'education.num', 'marital_num', 'race_num', 'sex_num','relative_num']
-            dummy_df = data[dummy_cols]
-            dummy_df =pd.concat([pd.get_dummies(dummy_df[cols], prefix = cols) for cols in dummy_df], axis=1)
-            data = data[['age' , 'fnlwgt', 'capital.gain', 'capital.loss', 'target_above']]
-            data = pd.concat([dummy_df, data], axis=1)
-
-
-        return data
-    else:
-        return data
-
-def load_data_uci_lime():
-    '''
-    Return:
-    feature_names,class_names,categorical_features,categorical_names, X_train, X_test, y_train, y_test
-    '''
-
-    feature_names = ["Age", "Workclass", "fnlwgt", "Education", "Education-Num", "Marital Status","Occupation", "Relationship", "Race", "Sex", "Capital Gain", "Capital Loss","Hours per week", "Country"]
-
-    data = np.genfromtxt('data\\adult.data', delimiter=', ', dtype=str)
-    y = data[:,14]
-    le= sklearn.preprocessing.LabelEncoder()
-    le.fit(y)
-    labels = le.transform(y)
-    class_names = le.classes_
-    data = data[:,:-1]
-
-    categorical_features = [1,3,5, 6,7,8,9,13]
-
-    categorical_names = {}
-    for feature in categorical_features:
-        le = sklearn.preprocessing.LabelEncoder()
-        le.fit(data[:, feature])
-        data[:, feature] = le.transform(data[:, feature])
-        categorical_names[feature] = le.classes_
-
-    X = data.astype(float)
-    encoder = sklearn.preprocessing.OneHotEncoder(categorical_features=categorical_features)
-
-    np.random.seed(1)
-    X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(X, y, train_size=0.80)
-
-    encoder.fit(data)
-    X_train = encoder.transform(X_train)
-    X_test = encoder.transform(X_test)
-    return feature_names,class_names,categorical_features,categorical_names, X_train, X_test, y_train, y_test
 
 
 #This works the same way as Sklearn's train/test split function with addition of a binary flag
@@ -539,3 +417,373 @@ def plot_learning_curve(estimator,
 
     plt.legend(loc="best")
     return plt
+
+
+
+def perturb_graph(model, mode, data, y_labs, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+    '''
+    Parameters:
+        model: object,
+            Random Forest: rfc
+            Gradient Boosted Classifier: gbc
+            Logistic Regression: logit
+        mode: str;
+            'accuracy' : Y Axis = Percent of Correct Predictions
+            'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
+        data: df object
+        column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
+        title: str; pass title of graph
+
+    Returns:
+        Forecasting Graph based on perturbed features.
+
+    '''
+    import collections
+    clone = data.copy()
+    column = column
+
+    #base_value = model.predict_proba(clone.median().values.reshape(
+    #    (1, clone.shape[1])))[:, 1] * 100
+
+    a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
+    b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
+    pertu = dict(zip(a, b))
+    pert = [i for i in pertu.values()]
+
+    preds = []
+    mean = []
+    num_of_1s = []
+    for i in pert:
+        clone[column] = data[column] * (i)
+        mean.append(str(column) + ':' + str(np.round(clone[column].mean())))
+        #preds.append(
+        #    model.predict_proba(clone.median().values.reshape(
+        #        (1, clone.shape[1])))[:, 1][0] * 100)
+        preds.append(
+            sklearn.metrics.accuracy_score(y_labs, model.predict(clone))* 100)
+        num_of_1s.append((collections.Counter(model.predict(clone))[1] / y_labs.shape[0]) *100)
+
+    fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
+    if 'accuracy' in mode:
+        sns.lineplot(x=pert, y=preds, ax=ax1)
+        ax1.set_ylabel('Accuracy %', fontsize=15)
+        ax1.set_title('Accuracy {}: {}'.format(
+        column.upper(), title),
+                  fontsize=25)
+        ax1.set_ylim(50,100)
+    elif 'proportion' in mode:
+        sns.lineplot(x=pert, y=num_of_1s, ax=ax1)
+        ax1.set_ylabel('% of Predictions == 1', fontsize=15)
+        ax1.set_title('Proportionality of Predictions {}: {}'.format(
+        column.upper(), title),
+                  fontsize=25)
+        ax1.set_ylim(0,80)
+    #ax1.axhline(base_value, ls='--', color='k')
+    #ax1.axhline(50, ls='--', color='r')
+    #ax1.axvline(1.0, ls='--', color='k')
+    #ax1.text(.5,.72, "Base Value - Prediction over Median ", fontsize=13)
+    ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
+    plt.legend(title='Legend',
+               loc='lower right',
+               labels=[
+                   'Perturbed - Probability'
+
+               ])
+
+    if isinstance(column, str):
+        for i, txt in enumerate(mean):
+            if i % 5 == 0:
+                if 'accuracy' in mode:
+                    ax1.annotate(txt, (pert[i], preds[i]))
+                if 'proportion' in mode:
+                    ax1.annotate(txt, (pert[i], num_of_1s[i]))
+
+def perturb_graph_cons(data, set, y_labs, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+    import collections
+    '''
+    Parameters:
+        data: df object
+        set: str;
+            'lendingclub' - load lending club models
+            'uci' - load uci models
+        y_labs; df: pass in y_test set
+        mode: str;
+            'accuracy' : Y Axis = Percent of Correct Predictions
+            'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
+        column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
+        title: str; pass title of graph
+
+    Returns:
+        Perturbed Input Graph. Shows all models simultaneously, as opposed to the above
+
+    '''
+    if 'uci' in set:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_uci()
+    else:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
+    clone = data.copy()
+    column = column
+
+
+    a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
+    b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
+    pertu = dict(zip(a, b))
+    pert = [i for i in pertu.values()]
+
+    rfc_preds = []
+    gbc_preds = []
+    logit_preds = []
+
+    rfc_1_preds =[]
+    gbc_1_preds =[]
+    logit_1_preds =[]
+
+    for i in pert:
+        clone[column] = data[column] * (i)
+        #rfc_preds.append(
+        #    rfc.predict_proba(clone.median().values.reshape(
+        #        (1, clone.shape[1])))[:, 1][0] * 100)
+        #gbc_preds.append(
+        #    gbc.predict_proba(clone.median().values.reshape(
+        #        (1, clone.shape[1])))[:, 1][0] * 100)
+        #logit_preds.append(
+        #    logit.predict_proba(clone.median().values.reshape(
+        #        (1, clone.shape[1])))[:, 1][0] * 100)
+        rfc_preds.append(sklearn.metrics.accuracy_score(y_labs, rfc.predict(clone))*100)
+        gbc_preds.append(sklearn.metrics.accuracy_score(y_labs, gbc.predict(clone))*100)
+        logit_preds.append(sklearn.metrics.accuracy_score(y_labs, logit.predict(clone))*100)
+        rfc_1_preds.append((collections.Counter(rfc.predict(clone))[1] / y_labs.shape[0]) *100)
+        gbc_1_preds.append((collections.Counter(gbc.predict(clone))[1] / y_labs.shape[0]) *100)
+        logit_1_preds.append((collections.Counter(logit.predict(clone))[1] / y_labs.shape[0]) *100)
+
+    fig, ax1 = plt.subplots(1, 1, figsize=(17, 4))
+    if 'accuracy' in mode:
+        sns.lineplot(x=pert, y=rfc_preds, ax=ax1)
+        sns.lineplot(x=pert, y=gbc_preds, ax=ax1)
+        sns.lineplot(x=pert, y=logit_preds, ax=ax1)
+        ax1.set_ylabel('Accuracy %', fontsize=15)
+        ax1.set_title('Accuracy {}: {}'.format(
+        column.upper(), title),
+                  fontsize=25)
+        ax1.set_ylim(0,100)
+
+    elif 'proportion' in mode:
+        sns.lineplot(x=pert, y=rfc_1_preds, ax=ax1)
+        sns.lineplot(x=pert, y=gbc_1_preds, ax=ax1)
+        sns.lineplot(x=pert, y=logit_1_preds, ax=ax1)
+        ax1.set_ylabel('% of Predictions == 1', fontsize=15)
+        ax1.set_title('Proportionality of Predictions {}: {}'.format(
+        column.upper(), title),
+                  fontsize=25)
+        ax1.set_ylim(0,100)
+
+    #ax1.axhline(base_value, ls='--',color = 'r')
+    #ax1.text(.5,.72, "Base Value - Prediction over mean ", fontsize=13)
+    ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
+    plt.legend(title='Model',
+               loc='upper left',
+               labels=[
+                   'Random Forest', 'Gradient Boosted Classifier',
+                   'Logistic Regression'
+               ])
+
+def display_sklearn_feature_importance(data, set, features, n_features):
+    '''
+    Parameters:
+    data: data object; coomatrix w/ encoded features
+    n_features: number of features to visualize
+    set: str;
+        'lendingclub' - load lending club models
+        'uci' - load uci models
+    Returns:
+    Graph of basic feature importance measurements
+
+    '''
+    if 'uci' in set:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_uci()
+    else:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
+    feature_importance = pd.DataFrame({
+        "feature":
+        features,
+        "RF_Feature_Importance":
+        np.round(rfc.feature_importances_, 4),
+        "GBC_Feature_Importance":
+        np.round(gbc.feature_importances_, 4),
+        "Logit_Coeff":
+        np.round(logit.coef_[0], 4),
+        "Max_Feature_Val":
+        pd.DataFrame(data.toarray(), columns=features).max(),
+    })
+
+    n = n_features
+    feature_importance['coeff_max'] = feature_importance[
+        'Logit_Coeff'] * feature_importance['Max_Feature_Val']
+    temp = feature_importance.nlargest(n, 'RF_Feature_Importance')
+    sns.barplot(temp['RF_Feature_Importance'], temp['feature'])
+    plt.title('Random Forest - Feature Importance Top {}'.format(n_features))
+    plt.show()
+
+    temp = feature_importance.nlargest(n, 'GBC_Feature_Importance')
+    sns.barplot(temp['GBC_Feature_Importance'], temp['feature'])
+    plt.title('Gradient Boosted Classifier - Feature Importance Top {}'.format(
+        n_features))
+    plt.show()
+
+    #We want to show the total possible feature impact here. Take the max of each feature in the training set by the logit coeff.
+    lookup = pd.DataFrame(data.toarray(), columns=features).max()
+    temp = feature_importance.nlargest(int(n / 2), 'coeff_max')
+    temp1 = feature_importance.nsmallest(int(n / 2), 'coeff_max')
+    temp = pd.concat([temp, temp1])
+    sns.barplot(temp['coeff_max'], temp['feature'])
+    plt.title('Logistic Regression - Coefficients Top&Bottom {}'.format(
+        int(n_features / 2)))
+    plt.show()
+
+def manual_perturb(X, y, set, column, scalar):
+    '''
+    Parameters
+        X: X test DataFrame
+        y: y test Dataframe
+        set: str;
+            'lendingclub' - load lending club models
+            'uci' - load uci models
+        column: str; feature of interest
+        scalar: float; multiplier
+    Returns:
+        To String
+    '''
+    import collections
+    if 'uci' in set:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_uci()
+    else:
+        rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
+    temp = X.copy()
+    temp[column] = temp[column] * scalar
+    print("Perturbing Feature: {} by {}".format(column,scalar))
+    print("Random Forest")
+    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, rfc.predict(X))))
+    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, rfc.predict(temp))))
+    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(rfc.predict(X))[1]))
+    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(rfc.predict(temp))[1]))
+
+
+    print("\nGradient Boosted Classifier")
+    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, gbc.predict(X))))
+    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, gbc.predict(temp))))
+    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(gbc.predict(X))[1]))
+    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(gbc.predict(temp))[1]))
+
+    print("\nLogistic Regression")
+    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, logit.predict(X))))
+    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, logit.predict(temp))))
+    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(logit.predict(X))[1]))
+    print("Number of '1' Predictions, After Perturbation: {}".format(collections.Counter(logit.predict(temp))[1]))
+
+    print("\nNeural Net")
+    print("Before Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, keras_ann.predict_classes(X))))
+    print("After Perturbation, Accuracy: {}".format(sklearn.metrics.accuracy_score(y, keras_ann.predict_classes(temp))))
+    print("Number of '1' Predictions, Before Perturbation: {}".format(collections.Counter(keras_ann.predict_classes(X))[1]))
+    print("Number of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(keras_ann.predict_classes(temp))[1]))
+
+def get_shap_values(model):
+    if type(model) == keras.engine.training.Model:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    shap_values = explainer.shap_values(X_test_shap, samples =500)
+    return shap_values
+
+
+#rfc_shap_values = get_shap_values(rfc)
+#gbc_shap_values = get_shap_values(gbc)
+#logit_shap_values = get_shap_values(logit)
+#sk_ann_shap_values = get_shap_values(sk_ann)
+#keras_ann_shap_values = get_shap_values(keras_ann)
+
+#shap_values = {str(type(rfc)) : rfc_shap_values,
+#               str(type(gbc)) : gbc_shap_values,
+#               str(type(logit)) : logit_shap_values,
+#str(type(sk_ann)) : sk_ann_shap_values,
+#               str(type(keras_ann)) : keras_ann_shap_values}
+
+#save_obj(shap_values, 'shap_values')
+
+
+#def get_base_values(model):
+#    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
+#    if type(model) == keras.engine.training.Model:
+#        f = lambda x: model.predict(x)[:, 1]
+#    else:
+#        f = lambda x: model.predict_proba(x)[:, 1]
+#    #We use the median as a proxy for computational efficiency. Rather than getting the expected value over the whole
+#    #training distribution, we get E(f(x)) over the median of the training set, e.g., model.predict(median(xi))
+#    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
+#    explainer = shap.KernelExplainer(f, med)
+#    return explainer.expected_value
+
+
+
+#rfc_base_value = get_base_values(rfc)
+#gbc_base_value = get_base_values(gbc)
+#logit_base_value = get_base_values(logit)
+#sk_ann_base_value = get_base_values(sk_ann)
+#keras_ann_base_value = get_base_values(keras_ann)
+
+#base_values =  {'rfc' : rfc_base_value, 'gbc' : gbc_base_value, 'logit' : logit_base_value,
+#'sklearn_ann' : sk_ann_base_value, 'keras_ann' : keras_ann_base_value}
+
+#Removing need for DeepExplain pip install. Stor
+
+
+#If this cell breaks, need to run:
+#pip install -e git+https://github.com/marcoancona/DeepExplain.git#egg=deepexplain
+
+#import keras
+#from keras.datasets import mnist
+#from keras.models import Sequential, Model
+#from keras.layers import Dense, Dropout, Flatten, Activation, BatchNormalization
+#from keras.layers import Conv2D, MaxPooling2D
+#from keras import backend as K
+#import tensorflow as tf
+#from keras.utils import multi_gpu_model
+# Import DeepExplain
+#from deepexplain.tensorflow import DeepExplain
+#from livelossplot import PlotLossesKeras
+
+
+#Code largely taken fron DeepExplain Git
+#https://github.com/marcoancona/DeepExplain/blob/master/examples/mint_cnn_keras.ipynb
+
+#with DeepExplain(session=K.get_session()) as de:  # <-- init DeepExplain context
+#    # Need to reconstruct the graph in DeepExplain context, using the same weights.
+    # With Keras this is very easy:
+    # 1. Get the input tensor to the original model
+#    input_tensor = keras_ann.layers[0].input
+
+    # 2. We now target the output of the last dense layer (pre-softmax)
+    # To do so, create a new model sharing the same layers untill the last dense (index -2)
+#    fModel = Model(inputs=input_tensor, outputs = keras_ann.layers[-2].output)
+#    target_tensor = fModel(input_tensor)
+
+#    xs = np.array(X_train_shap)
+#    ys = tf.keras.utils.to_categorical(y_train,2)
+
+#    attributions_gradin = de.explain('grad*input', target_tensor, input_tensor, xs, ys=ys)
+#    attributions_sal   = de.explain('saliency', target_tensor, input_tensor, xs, ys=ys)
+    #attributions_ig    = de.explain('intgrad', target_tensor, input_tensor, xs, ys=ys)
+    #attributions_dl    = de.explain('deeplift', target_tensor, input_tensor, xs, ys=ys) #Deeplift. Incompatible w/ model arch.
+#    attributions_elrp  = de.explain('elrp', target_tensor, input_tensor, xs, ys=ys)
+    #attributions_occ   = de.explain('occlusion', target_tensor, input_tensor, xs, ys=ys)
+
+    # Compare Gradient * Input with approximate Shapley Values
+    # Note1: Shapley Value sampling with 100 samples per feature (78400 runs) takes a couple of minutes on a GPU.
+    # Note2: 100 samples are not enough for convergence, the result might be affected by sampling variance
+#    attributions_sv     = de.explain('shapley_sampling', target_tensor, input_tensor, xs, ys=ys, samples=100)
+
+#save_obj(attributions_gradin, 'attributions_gradin')
+#save_obj(attributions_sal, 'attributions_sal')
+#save_obj(attributions_elrp, 'attributions_elrp')
+#save_obj(attributions_sv, 'attributions_sv')
