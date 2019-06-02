@@ -785,10 +785,7 @@ class Perturb():
                         ax1.annotate(txt, (self.pert[i], num_of_1s[i]))
 
     def perturb_graph_cons(self, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
-        import collections
-        import sklearn
-        import matplotlib.pyplot as plt
-        import seaborn as sns
+
         '''
         Parameters:
             mode: str;
@@ -801,7 +798,10 @@ class Perturb():
             Perturbed Input Graph. Shows all models simultaneously, as opposed to the above
 
         '''
-
+        import collections
+        import sklearn
+        import matplotlib.pyplot as plt
+        import seaborn as sns
         clone = self.X.copy()
         column = column
 
