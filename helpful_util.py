@@ -729,7 +729,7 @@ class Perturb():
         elif 'lending' in self.data:
             self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_lendingclub()
 
-    def perturb_graph(self, model, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+    def perturb_graph(self, model, mode, column):
         '''
         Parameters:
             model: object,
@@ -767,17 +767,17 @@ class Perturb():
         if 'accuracy' in mode:
             sns.lineplot(x=self.pert, y=preds, ax=ax1)
             ax1.set_ylabel('Accuracy %', fontsize=15)
-            ax1.set_title('Accuracy {}: {}'.format(
-            column.upper(), title),
+            ax1.set_title('Accuracy :{}'.format(
+            column.upper()),
                       fontsize=25)
-            ax1.set_ylim(50,100)
+            ax1.set_ylim(0,100)
         elif 'proportion' in mode:
             sns.lineplot(x=self.pert, y=num_of_1s, ax=ax1)
             ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-            ax1.set_title('Proportionality of Predictions {}: {}'.format(
-            column.upper(), title),
+            ax1.set_title('Proportionality of Predictions :{}'.format(
+            column.upper()),
                       fontsize=25)
-            ax1.set_ylim(0,80)
+            ax1.set_ylim(0,100)
 
         ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
         plt.legend(title='Legend',
@@ -795,7 +795,7 @@ class Perturb():
                     if 'proportion' in mode:
                         ax1.annotate(txt, (self.pert[i], num_of_1s[i]))
 
-    def perturb_graph_cons(self, mode, column, title = 'Label with Model Type: GBC/RFC/etc..'):
+    def perturb_graph_cons(self, mode, column):
 
         '''
         Parameters:
@@ -842,8 +842,8 @@ class Perturb():
             sns.lineplot(x=self.pert, y=gbc_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=logit_preds, ax=ax1)
             ax1.set_ylabel('Accuracy %', fontsize=15)
-            ax1.set_title('Accuracy {}: {}'.format(
-            column.upper(), title),
+            ax1.set_title('Accuracy : {}'.format(
+            column.upper()),
                       fontsize=25)
             ax1.set_ylim(0,100)
 
@@ -852,8 +852,8 @@ class Perturb():
             sns.lineplot(x=self.pert, y=gbc_1_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=logit_1_preds, ax=ax1)
             ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-            ax1.set_title('Proportionality of Predictions {}: {}'.format(
-            column.upper(), title),
+            ax1.set_title('Proportionality of Predictions :{}'.format(
+            column.upper()),
                       fontsize=25)
             ax1.set_ylim(0,100)
 
