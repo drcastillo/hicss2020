@@ -466,13 +466,16 @@ def display_sklearn_feature_importance(data, set, features, n_features):
     temp = feature_importance.nlargest(n, 'RF_Feature_Importance')
     sns.barplot(temp['RF_Feature_Importance'], temp['feature'])
     plt.title('Random Forest - Feature Importance Top {}'.format(n_features))
+    plt.savefig('images/sklearn_feature_importance/RandomForest_{}features.png'.format(n_features), eps = 500)
     plt.show()
 
     temp = feature_importance.nlargest(n, 'GBC_Feature_Importance')
     sns.barplot(temp['GBC_Feature_Importance'], temp['feature'])
     plt.title('Gradient Boosted Classifier - Feature Importance Top {}'.format(
         n_features))
+    plt.savefig('images/sklearn_feature_importance/GradientBoosting_{}features.png'.format(n_features), eps = 500)
     plt.show()
+
 
     #We want to show the total possible feature impact here. Take the max of each feature in the training set by the logit coeff.
     lookup = pd.DataFrame(data.toarray(), columns=features).max()
@@ -482,6 +485,7 @@ def display_sklearn_feature_importance(data, set, features, n_features):
     sns.barplot(temp['coeff_max'], temp['feature'])
     plt.title('Logistic Regression - Coefficients Top&Bottom {}'.format(
         int(n_features / 2)))
+    plt.savefig('images/sklearn_feature_importance/Logit_{}features.png'.format(n_features), eps = 500)
     plt.show()
 
 
