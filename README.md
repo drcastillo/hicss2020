@@ -27,3 +27,6 @@ A few ways to go about this:
       activate <env_name>
       ```
         - Launch Jupyter notebook within the activated environment
+  - 3:
+   - The First 2 blocks of code deal with functions with global dependencies and the loading of all data objects.
+    Objects were stored locally during model training to cut down on load times. 
