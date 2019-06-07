@@ -34,17 +34,13 @@ A few ways to go about this:
 # Brief Function Descriptions
 Most functions were designed using Plotly to add interactivity and lessen dependency on manual parameter entry.
 A few examples.
-- If you want to look at the classification reports for each model, as judged by inference on test set, toggle through the models:
-Classification Reports:
+### Classification reports
+- toggle model
 ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/classreport_jpg.PNG "Logo Title Text 1")
 
 ### Sklearn Feature Importance Graphs
   - toggle feature count to display more or less features
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/sklearnfeatimp_jpg.PNG "Logo Title Text 1")
-
-### Manual Perturb Logs
-  - toggle feature and multiplier to see what happens to a model's predictions as we perturb the input feature by a scalar multiple (multiplier of 1 == No perturbance)
-  ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/Manual_perturb.jpg")
 
 ### Perturb Graphs
   - Two modes: Accuracy & proportion.
