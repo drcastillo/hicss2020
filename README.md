@@ -29,4 +29,10 @@ A few ways to go about this:
         - Launch Jupyter notebook within the activated environment
   - 3:
    - The First 2 blocks of code deal with functions with global dependencies and the loading of all data objects.
-    Objects were stored locally during model training to cut down on load times. 
+    Objects were stored locally during model training to cut down on load times.
+
+# Brief Function Descriptions
+Most functions were designed using Plotly to add interactivity and lessen dependency on manual parameter entry.
+A few examples. If you want to look at the classification reports for each model, as judged by inference on test set, toggle through the models:
+Inline-style:
+![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/classreport_jpg.PNG "Logo Title Text 1")
