@@ -4,7 +4,7 @@
 # Reference:
 
 from __future__ import print_function
-from heaton_utils import *
+from utils.heaton_utils import *
 
 import numpy as np
 import warnings
@@ -33,17 +33,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import resample
 import seaborn as sns
+from utils.load_objects import *
 
-def save_obj(obj, name):
-    import pickle
-    with open('obj/lendingclub/' + name + '.pkl', 'wb') as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
-
-def load_obj(name):
-    import pickle
-    with open('obj/lendingclub/' + name + '.pkl', 'rb') as f:
-        return pickle.load(f)
 
 def load_models_lendingclub():
     from sklearn.externals import joblib
@@ -242,142 +233,6 @@ def plot_confusion_matrix(cm,
     plt.xlabel('Predicted label')
 
 
-####################################################################################################
-# Utilities for Fetching data files from dir
-####################################################################################################
-def list_dir(verbose=True):
-    '''
-    function to list the contents of current working directory
-    Return:
-    list of branches
-    dict of current working directory {idx : branch}
-    '''
-    idx = []
-    contents = []
-    cwd = os.getcwd()
-    tree = os.listdir(cwd)
-    for i, j in enumerate(tree):
-        idx.append(i)
-        contents.append(j)
-    if verbose:
-        print("Working Dir: {}".format(cwd))
-        print("Returning Contents of Working Directory..")
-    return contents, dict(zip(idx, contents))
-
-
-def fetch_data_path(folder='data'):
-    '''
-    function to string concat holistic path to data files w/ user input
-    Parameters:
-        folder: str - name of data folder
-    Return:
-        string of concatenated path to data file
-    '''
-    cwd = os.getcwd()
-    path = cwd + "\\" + folder
-    print("Choose a file from data directory:")
-    for idx, pat in enumerate(os.listdir(path)):
-        print("{}) {}".format(idx, pat))
-    i = input("Enter Number: ")
-    try:
-        if 0 <= int(i) <= len(os.listdir(path)):
-            dataPath = os.listdir(path)[int(i)]
-            print("Path to Data Stored: {}".format(path + "\\" + dataPath))
-            return path + "\\" + dataPath
-    except:
-        print("Invalid Selection")
-    return None
-
-####################################################################################################
-# Utilities for Loading various data sets into memory w/ some cleaning
-####################################################################################################
-
-
-
-#This works the same way as Sklearn's train/test split function with addition of a binary flag
-#that allows for one hot encoding of the response variable. I
-def split_data(df, keras=False, testSize=0.2, target = None, randomState=None):
-    '''
-    PARAMETERS:
-		df: dataframe object
-        keras: True if Using MLP. One hot encoding of response variable
-        testSize = split between train and test set
-        randomState = seeding
-
-    RETURN:
-        4 objects for model building
-        xtrain, xtest, ytrain, ytest
-
-    EXAMPLE:
-        X_train, X_test, y_train, y_test = split_data(df = df, keras = False, testSize = 0.2, randomState = 123)
-
-    '''
-    if not keras:
-        X, y = df.iloc[:, :-1], df.iloc[:, -1]  #Split Dependent / Independent
-        xtrain, xtest, ytrain, ytest = train_test_split(
-            X,
-            y,
-            stratify=y,
-            test_size=testSize,
-            shuffle=True,
-            random_state=randomState)  #Train Test Split
-        return xtrain, xtest, ytrain, ytest
-    else:
-        if target:
-            target = df[target]
-        else:
-            target = df.columns[-1]  #Fetch last columns name
-        X, y = to_xy(df, target)
-
-        xtrain, xtest, ytrain, ytest = train_test_split(
-            X, y, test_size=testSize, shuffle=True,
-            random_state=randomState)  #Train Test Split
-        return xtrain, xtest, ytrain, ytest
-
-
-##################################################
-# Utility code for detecting outliers - Tukey Method
-##################################################
-
-
-def detect_outliers(df, n, features):
-    """
-    Takes a dataframe df of features and returns a list of the indices
-    corresponding to the observations containing more than n outliers according
-    to the Tukey method.
-
-    Parameters:
-        df: Dataframe object
-        n: int; specifies the thresholded integer count of outliers per observation
-        features: Specify which features to search
-    """
-    outlier_indices = []
-
-    # iterate over features(columns)
-    for col in features:
-        # 1st quartile (25%)
-        Q1 = np.percentile(df[col], 25)
-        # 3rd quartile (75%)
-        Q3 = np.percentile(df[col], 75)
-        # Interquartile range (IQR)
-        IQR = Q3 - Q1
-
-        # outlier step
-        outlier_step = 1.5 * IQR
-
-        # Determine a list of indices of outliers for feature col
-        outlier_list_col = df[(df[col] < Q1 - outlier_step) |
-                              (df[col] > Q3 + outlier_step)].index
-
-        # append the found outlier indices for col to the list of outlier indices
-        outlier_indices.extend(outlier_list_col)
-
-    # select observations containing more than 2 outliers
-    outlier_indices = Counter(outlier_indices)
-    multiple_outliers = list(k for k, v in outlier_indices.items() if v > n)
-
-    return multiple_outliers
-
 
 ##################################################
 # Utility code for measuring model performance given dataset size
@@ -500,96 +355,7 @@ def get_shap_values(model):
     return shap_values
 
 
-#rfc_shap_values = get_shap_values(rfc)
-#gbc_shap_values = get_shap_values(gbc)
-#logit_shap_values = get_shap_values(logit)
-#sk_ann_shap_values = get_shap_values(sk_ann)
-#keras_ann_shap_values = get_shap_values(keras_ann)
 
-#shap_values = {str(type(rfc)) : rfc_shap_values,
-#               str(type(gbc)) : gbc_shap_values,
-#               str(type(logit)) : logit_shap_values,
-#str(type(sk_ann)) : sk_ann_shap_values,
-#               str(type(keras_ann)) : keras_ann_shap_values}
-
-#save_obj(shap_values, 'shap_values')
-
-
-#def get_base_values(model):
-#    #Keras doesn't have a model.predict_proba function. It outputs the probabilities via predict method
-#    if type(model) == keras.engine.training.Model:
-#        f = lambda x: model.predict(x)[:, 1]
-#    else:
-#        f = lambda x: model.predict_proba(x)[:, 1]
-#    #We use the median as a proxy for computational efficiency. Rather than getting the expected value over the whole
-#    #training distribution, we get E(f(x)) over the median of the training set, e.g., model.predict(median(xi))
-#    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
-#    explainer = shap.KernelExplainer(f, med)
-#    return explainer.expected_value
-
-
-
-#rfc_base_value = get_base_values(rfc)
-#gbc_base_value = get_base_values(gbc)
-#logit_base_value = get_base_values(logit)
-#sk_ann_base_value = get_base_values(sk_ann)
-#keras_ann_base_value = get_base_values(keras_ann)
-
-#base_values =  {'rfc' : rfc_base_value, 'gbc' : gbc_base_value, 'logit' : logit_base_value,
-#'sklearn_ann' : sk_ann_base_value, 'keras_ann' : keras_ann_base_value}
-
-#Removing need for DeepExplain pip install. Stor
-
-
-#If this cell breaks, need to run:
-#pip install -e git+https://github.com/marcoancona/DeepExplain.git#egg=deepexplain
-
-#import keras
-#from keras.datasets import mnist
-#from keras.models import Sequential, Model
-#from keras.layers import Dense, Dropout, Flatten, Activation, BatchNormalization
-#from keras.layers import Conv2D, MaxPooling2D
-#from keras import backend as K
-#import tensorflow as tf
-#from keras.utils import multi_gpu_model
-# Import DeepExplain
-#from deepexplain.tensorflow import DeepExplain
-#from livelossplot import PlotLossesKeras
-
-
-#Code largely taken fron DeepExplain Git
-#https://github.com/marcoancona/DeepExplain/blob/master/examples/mint_cnn_keras.ipynb
-
-#with DeepExplain(session=K.get_session()) as de:  # <-- init DeepExplain context
-#    # Need to reconstruct the graph in DeepExplain context, using the same weights.
-    # With Keras this is very easy:
-    # 1. Get the input tensor to the original model
-#    input_tensor = keras_ann.layers[0].input
-
-    # 2. We now target the output of the last dense layer (pre-softmax)
-    # To do so, create a new model sharing the same layers untill the last dense (index -2)
-#    fModel = Model(inputs=input_tensor, outputs = keras_ann.layers[-2].output)
-#    target_tensor = fModel(input_tensor)
-
-#    xs = np.array(X_train_shap)
-#    ys = tf.keras.utils.to_categorical(y_train,2)
-
-#    attributions_gradin = de.explain('grad*input', target_tensor, input_tensor, xs, ys=ys)
-#    attributions_sal   = de.explain('saliency', target_tensor, input_tensor, xs, ys=ys)
-    #attributions_ig    = de.explain('intgrad', target_tensor, input_tensor, xs, ys=ys)
-    #attributions_dl    = de.explain('deeplift', target_tensor, input_tensor, xs, ys=ys) #Deeplift. Incompatible w/ model arch.
-#    attributions_elrp  = de.explain('elrp', target_tensor, input_tensor, xs, ys=ys)
-    #attributions_occ   = de.explain('occlusion', target_tensor, input_tensor, xs, ys=ys)
-
-    # Compare Gradient * Input with approximate Shapley Values
-    # Note1: Shapley Value sampling with 100 samples per feature (78400 runs) takes a couple of minutes on a GPU.
-    # Note2: 100 samples are not enough for convergence, the result might be affected by sampling variance
-#    attributions_sv     = de.explain('shapley_sampling', target_tensor, input_tensor, xs, ys=ys, samples=100)
-
-#save_obj(attributions_gradin, 'attributions_gradin')
-#save_obj(attributions_sal, 'attributions_sal')
-#save_obj(attributions_elrp, 'attributions_elrp')
-#save_obj(attributions_sv, 'attributions_sv')
 
 class ExplainShap():
 
@@ -727,7 +493,7 @@ class Perturb():
         self.pertu = dict(zip(self.a, self.b))
         self.pert = [i for i in self.pertu.values()]
 
-        from helpful_util import load_models_lendingclub, load_models_uci
+        from utils.load_objects import load_models_lendingclub, load_models_uci
         if 'uci' in self.data:
             self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_uci()
         elif 'lending' in self.data:
@@ -994,120 +760,3 @@ def display_shapvalues(shapvalues, features, n):
     sns.barplot(temp['nn'], temp.index)
     plt.title('Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
     plt.show()
-
-def load_all_objects():
-    #Load Data Objects. Stored these locally/remotely to avoid dependency issues
-    #list of all features used
-    global feature_names
-    feature_names = [
-        'loan_amnt', 'term', 'int_rate', 'installment', 'grade', 'sub_grade',
-        'emp_length', 'home_ownership', 'annual_inc', 'title', 'inq_last_6mths',
-        'revol_bal', 'total_pymnt', 'total_rec_late_fee', 'last_pymnt_amnt',
-        'acc_open_past_24mths', 'delinq_amnt', 'tax_liens', 'tot_hi_cred_lim',
-        'total_bal_ex_mort', 'total_bc_limit', 'total_il_high_credit_limit',
-        'loan_condition'
-    ]
-
-    #List only Continuous Feats.
-    global continuous
-    continuous = [
-        'loan_amnt', 'int_rate', 'installment', 'annual_inc', 'inq_last_6mths',
-        'revol_bal', 'total_pymnt', 'total_rec_late_fee', 'last_pymnt_amnt',
-        'acc_open_past_24mths', 'delinq_amnt', 'tax_liens', 'tot_hi_cred_lim',
-        'total_bal_ex_mort', 'total_bc_limit', 'total_il_high_credit_limit'
-    ]
-
-    #Load Models
-    global rfc
-    global gbc
-    global logit
-    global keras_ann
-    global sk_ann
-    rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
-
-    #indices of cat features
-    global categorical_features
-    categorical_features = [1, 4, 5, 6, 7, 9]  #Get Nominal / Ordinal / etc..
-
-    #Load Dictionary of categorical features after encoded. Need this for Lime
-    global categorical_names
-    categorical_names = load_obj('data_objects/categorical_names')
-
-    #all features as a list. Unwrapping encoding
-    global features
-    features = []
-    for k in categorical_names.values():
-        for i in k:
-            features.append(i)
-
-    #Clean up Feats
-    features[:2] = ['Term:' + i for i in features[:2]]
-    features[2:9] = ['Loan_Grade:' + i for i in features[2:9]]
-    features[9:44] = ['Loan_SubGrade:' + i for i in features[9:44]]
-    features[44:56] = ['Employment_Length:' + i for i in features[44:56]]
-    features[56:60] = ['Home_Ownership:' + i for i in features[56:60]]
-    features[60:] = ['Loan_Title:' + i for i in features[60:]]
-    #Concatenate encoded features + continuous features
-    features = features + continuous
-
-    #Load necessary data objects. Pre encoded Data
-    global X_train
-    X_train = load_obj('data_objects/X_train')
-    global X_test
-    X_test = load_obj('data_objects/X_test')
-    global y_train
-    y_train = load_obj('data_objects/y_train')
-    global y_test
-    y_test = load_obj('data_objects/y_test')
-
-    #Load encoded data that models were trained on.
-    global encoded_train
-    encoded_train = load_obj('data_objects/encoded_train')
-    global encoded_test
-    encoded_test = load_obj('data_objects/encoded_test')
-    global data
-    data = load_obj('data_objects/data')
-    global encoder
-    encoder = load_obj('data_objects/encoder')
-
-    #Split
-    #Manual perturbations
-
-    #Generate a sample of the test set for feature perturbance
-    global X_test_holdout
-    X_test_holdout = load_obj('data_objects/X_test')
-    idx = np.random.choice(X_test_holdout.shape[0], 2000,
-                           replace=False)  #Random 2000 samples w/o replacements
-    X_test_holdout = X_test_holdout[idx]  #extract
-    X_test_holdout = pd.DataFrame(
-        encoder.transform(X_test_holdout).toarray(),
-        columns=features)  #Convert to DF for column names\
-    y_test_holdout = y_test[idx]
-    global X_train_shap
-    global X_test_shap
-    X_train_shap = pd.DataFrame(encoded_train.toarray(), columns=features)
-    X_test_shap = pd.DataFrame(encoder.transform(X_test).toarray(),
-                               columns=features)
-    global shap_values
-    shap_values = load_obj('data_objects/shap_values')  #Load Dict of Shap Values
-
-    global models
-    models = {
-        str(type(rfc)): ('Random Forest', shap_values[str(type(rfc))]),
-        str(type(gbc)):
-        ('Gradient Boosted Classifier', shap_values[str(type(gbc))]),
-        str(type(logit)): ('Logistic Regression', shap_values[str(type(logit))]),
-        str(type(sk_ann)):
-        ('Sklearn MultiLayer Perceptron', shap_values[str(type(sk_ann))]),
-        str(type(keras_ann)):
-        ('Keras Multilayer Perceptron', shap_values[str(type(keras_ann))])
-    }
-
-    global model_dict_2
-    model_dict_2 = {
-        'keras neural network': keras_ann,
-        'logistic regression': logit,
-        'random forest': rfc,
-        'gradient boosted trees': gbc,
-        'sklearn neural network' : sk_ann
-    }
