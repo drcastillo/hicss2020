@@ -499,7 +499,7 @@ class Perturb():
         elif 'lending' in self.data:
             self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_lendingclub()
 
-    def perturb_graph(self, model, mode, column):
+    def perturb_graph_int(self, model, mode, column):
         '''
         Parameters:
             model: object,
@@ -528,10 +528,12 @@ class Perturb():
             clone[column] = self.X[column] * (i)
             mean.append(str(column) + ':' + str(np.round(clone[column].mean())))
 
-            preds.append(
-                sklearn.metrics.accuracy_score(self.y, model.predict(clone))* 100)
-
-            num_of_1s.append((collections.Counter(model.predict(clone))[1] / self.y.shape[0]) *100)
+            if type(model) ==keras.engine.sequential.Sequential:
+                preds.append(sklearn.metrics.accuracy_score(self.y, model.predict_classes(clone))* 100)
+                num_of_1s.append((collections.Counter(model.predict_classes(clone))[1] / self.y.shape[0]) *100)
+            else:
+                preds.append(sklearn.metrics.accuracy_score(self.y, model.predict(clone))* 100)
+                num_of_1s.append((collections.Counter(model.predict(clone))[1] / self.y.shape[0]) *100)
 
         fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
         if 'accuracy' in mode:
@@ -550,12 +552,7 @@ class Perturb():
             ax1.set_ylim(0,100)
 
         ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
-        plt.legend(title='Legend',
-                   loc='lower right',
-                   labels=[
-                       'Perturbed - Probability'
 
-                   ])
 
         if isinstance(column, str):
             for i, txt in enumerate(mean):
@@ -565,7 +562,7 @@ class Perturb():
                     if 'proportion' in mode:
                         ax1.annotate(txt, (self.pert[i], num_of_1s[i]))
 
-    def perturb_graph_cons(self, mode, column):
+    def perturb_graph_cons_int(self, mode, column):
 
         '''
         Parameters:
@@ -590,27 +587,36 @@ class Perturb():
         rfc_preds = []
         gbc_preds = []
         logit_preds = []
+        keras_ann_preds = []
+        sk_ann_preds = []
 
         rfc_1_preds =[]
         gbc_1_preds =[]
         logit_1_preds =[]
-
+        keras_ann_1_preds = []
+        sk_ann_1_preds = []
         for i in self.pert:
             clone[column] = self.X[column] * (i)
 
             rfc_preds.append(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(clone))*100)
             gbc_preds.append(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(clone))*100)
             logit_preds.append(sklearn.metrics.accuracy_score(self.y, self.logit.predict(clone))*100)
+            keras_ann_preds.append(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(clone))* 100)
+            sk_ann_preds.append(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(clone))*100)
 
             rfc_1_preds.append((collections.Counter(self.rfc.predict(clone))[1] / self.y.shape[0]) *100)
             gbc_1_preds.append((collections.Counter(self.gbc.predict(clone))[1] / self.y.shape[0]) *100)
             logit_1_preds.append((collections.Counter(self.logit.predict(clone))[1] / self.y.shape[0]) *100)
+            keras_ann_1_preds.append((collections.Counter(self.keras_ann.predict_classes(clone))[1] / self.y.shape[0]) *100)
+            sk_ann_1_preds.append((collections.Counter(self.sk_ann.predict(clone))[1] / self.y.shape[0]) *100)
 
         fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
         if 'accuracy' in mode:
             sns.lineplot(x=self.pert, y=rfc_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=gbc_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=logit_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=keras_ann_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=sk_ann_preds, ax=ax1)
             ax1.set_ylabel('Accuracy %', fontsize=15)
             ax1.set_title('Accuracy : {}'.format(
             column.upper()),
@@ -621,6 +627,9 @@ class Perturb():
             sns.lineplot(x=self.pert, y=rfc_1_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=gbc_1_preds, ax=ax1)
             sns.lineplot(x=self.pert, y=logit_1_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=keras_ann_1_preds, ax=ax1)
+            sns.lineplot(x=self.pert, y=keras_ann_1_preds, ax=ax1)
+
             ax1.set_ylabel('% of Predictions == 1', fontsize=15)
             ax1.set_title('Proportionality of Predictions :{}'.format(
             column.upper()),
@@ -630,10 +639,10 @@ class Perturb():
 
         ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
         plt.legend(title='Model',
-                   loc='upper left',
+                   loc='lower right',
                    labels=[
                        'Random Forest', 'Gradient Boosted Classifier',
-                       'Logistic Regression'
+                       'Logistic Regression', 'Keras Neural Network', 'Sklearn Neural Network'
                    ])
 
     def manual_perturb(self, column, scalar):
@@ -680,7 +689,15 @@ class Perturb():
         print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.logit.predict(self.X))[1]))
         print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.logit.predict(temp))[1]))
 
-        print("\n\033[1m Neural Net\033[0m")
+        print("\n\033[1mSklearn Neural Network\033[0m")
+        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(self.X))*100,4)
+        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
+        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(temp))*100,4)
+        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
+        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.sk_ann.predict(self.X))[1]))
+        print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.sk_ann.predict(temp))[1]))
+
+        print("\n\033[1m Keras Neural Network\033[0m")
         bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(self.X))*100,4)
         print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
         aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(temp))*100,4)
@@ -688,18 +705,21 @@ class Perturb():
         print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.keras_ann.predict_classes(self.X))[1]))
         print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(self.keras_ann.predict_classes(temp))[1]))
         print('-' * 75)
+
 def display_abs_shapvalues(shapvalues, features, num_features):
     rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
     rfc_shapvalues_abs = pd.DataFrame(shapvalues[str(type(rfc))], columns = features).abs().sum()
     logit_shapvalues_abs = pd.DataFrame(shapvalues[str(type(logit))], columns = features).abs().sum()
     gbc_shapvalues_abs = pd.DataFrame(shapvalues[str(type(gbc))], columns = features).abs().sum()
     keras_ann_shapvalues_abs = pd.DataFrame(shapvalues[str(type(keras_ann))], columns = features).abs().sum()
+    sk_ann_shapvalues_abs = pd.DataFrame(shapvalues[str(type(sk_ann))], columns = features).abs().sum()
 
 
     combined_shap = pd.DataFrame(rfc_shapvalues_abs, columns= ['rfc'])
     combined_shap['logit'] = logit_shapvalues_abs
     combined_shap['gbc'] = gbc_shapvalues_abs
-    combined_shap['nn'] = keras_ann_shapvalues_abs
+    combined_shap['keras_nn'] = keras_ann_shapvalues_abs
+    combined_shap['sklearn_nn'] = sk_ann_shapvalues_abs
 
     temp = combined_shap.nlargest(num_features, 'rfc')
     sns.barplot(temp['rfc'], temp.index)
@@ -716,9 +736,14 @@ def display_abs_shapvalues(shapvalues, features, num_features):
     plt.title('Gradient Boosted Classifier - Absolute Shap Values TOP {}'.format(num_features))
     plt.show()
 
-    temp = combined_shap.nlargest(num_features, 'nn')
-    sns.barplot(temp['nn'], temp.index)
-    plt.title('Neural Network - Absolute Shap Values TOP {}'.format(num_features))
+    temp = combined_shap.nlargest(num_features, 'keras_nn')
+    sns.barplot(temp['keras_nn'], temp.index)
+    plt.title('Keras Neural Network - Absolute Shap Values TOP {}'.format(num_features))
+    plt.show()
+
+    temp = combined_shap.nlargest(num_features, 'sklearn_nn')
+    sns.barplot(temp['sklearn_nn'], temp.index)
+    plt.title('Sklearn Neural Network - Absolute Shap Values TOP {}'.format(num_features))
     plt.show()
 
 def display_shapvalues(shapvalues, features, n):
@@ -727,11 +752,13 @@ def display_shapvalues(shapvalues, features, n):
     logit_shapvalues = pd.DataFrame(shapvalues[str(type(logit))], columns = features).sum()
     gbc_shapvalues = pd.DataFrame(shapvalues[str(type(gbc))], columns = features).sum()
     keras_ann_shapvalues = pd.DataFrame(shapvalues[str(type(keras_ann))], columns = features).sum()
+    sk_ann_shapvalues = pd.DataFrame(shapvalues[str(type(sk_ann))], columns = features).sum()
 
     combined_shap = pd.DataFrame(rfc_shapvalues, columns= ['rfc'])
     combined_shap['logit'] = logit_shapvalues
     combined_shap['gbc'] = gbc_shapvalues
-    combined_shap['nn'] = keras_ann_shapvalues
+    combined_shap['keras_nn'] = keras_ann_shapvalues
+    combined_shap['sklearn_nn'] = sk_ann_shapvalues
 
     temp = combined_shap.nlargest(int(n / 2), 'rfc')
     temp1 = combined_shap.nsmallest(int(n / 2), 'rfc')
@@ -754,9 +781,16 @@ def display_shapvalues(shapvalues, features, n):
     plt.title('Gradient Boosting Shap Values - Top&Bottom {}'.format(int(n / 2)))
     plt.show()
 
-    temp = combined_shap.nlargest(int(n / 2), 'nn')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'nn')
+    temp = combined_shap.nlargest(int(n / 2), 'keras_nn')
+    temp1 = combined_shap.nsmallest(int(n / 2), 'keras_nn')
     temp = pd.concat([temp, temp1])
-    sns.barplot(temp['nn'], temp.index)
-    plt.title('Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
+    sns.barplot(temp['keras_nn'], temp.index)
+    plt.title('Keras Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
+    plt.show()
+
+    temp = combined_shap.nlargest(int(n / 2), 'sklearn_nn')
+    temp1 = combined_shap.nsmallest(int(n / 2), 'sklearn_nn')
+    temp = pd.concat([temp, temp1])
+    sns.barplot(temp['sklearn_nn'], temp.index)
+    plt.title('Sklearn Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
     plt.show()
