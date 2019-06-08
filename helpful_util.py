@@ -994,3 +994,120 @@ def display_shapvalues(shapvalues, features, n):
     sns.barplot(temp['nn'], temp.index)
     plt.title('Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
     plt.show()
+
+def load_all_objects():
+    #Load Data Objects. Stored these locally/remotely to avoid dependency issues
+    #list of all features used
+    global feature_names
+    feature_names = [
+        'loan_amnt', 'term', 'int_rate', 'installment', 'grade', 'sub_grade',
+        'emp_length', 'home_ownership', 'annual_inc', 'title', 'inq_last_6mths',
+        'revol_bal', 'total_pymnt', 'total_rec_late_fee', 'last_pymnt_amnt',
+        'acc_open_past_24mths', 'delinq_amnt', 'tax_liens', 'tot_hi_cred_lim',
+        'total_bal_ex_mort', 'total_bc_limit', 'total_il_high_credit_limit',
+        'loan_condition'
+    ]
+
+    #List only Continuous Feats.
+    global continuous
+    continuous = [
+        'loan_amnt', 'int_rate', 'installment', 'annual_inc', 'inq_last_6mths',
+        'revol_bal', 'total_pymnt', 'total_rec_late_fee', 'last_pymnt_amnt',
+        'acc_open_past_24mths', 'delinq_amnt', 'tax_liens', 'tot_hi_cred_lim',
+        'total_bal_ex_mort', 'total_bc_limit', 'total_il_high_credit_limit'
+    ]
+
+    #Load Models
+    global rfc
+    global gbc
+    global logit
+    global keras_ann
+    global sk_ann
+    rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
+
+    #indices of cat features
+    global categorical_features
+    categorical_features = [1, 4, 5, 6, 7, 9]  #Get Nominal / Ordinal / etc..
+
+    #Load Dictionary of categorical features after encoded. Need this for Lime
+    global categorical_names
+    categorical_names = load_obj('data_objects/categorical_names')
+
+    #all features as a list. Unwrapping encoding
+    global features
+    features = []
+    for k in categorical_names.values():
+        for i in k:
+            features.append(i)
+
+    #Clean up Feats
+    features[:2] = ['Term:' + i for i in features[:2]]
+    features[2:9] = ['Loan_Grade:' + i for i in features[2:9]]
+    features[9:44] = ['Loan_SubGrade:' + i for i in features[9:44]]
+    features[44:56] = ['Employment_Length:' + i for i in features[44:56]]
+    features[56:60] = ['Home_Ownership:' + i for i in features[56:60]]
+    features[60:] = ['Loan_Title:' + i for i in features[60:]]
+    #Concatenate encoded features + continuous features
+    features = features + continuous
+
+    #Load necessary data objects. Pre encoded Data
+    global X_train
+    X_train = load_obj('data_objects/X_train')
+    global X_test
+    X_test = load_obj('data_objects/X_test')
+    global y_train
+    y_train = load_obj('data_objects/y_train')
+    global y_test
+    y_test = load_obj('data_objects/y_test')
+
+    #Load encoded data that models were trained on.
+    global encoded_train
+    encoded_train = load_obj('data_objects/encoded_train')
+    global encoded_test
+    encoded_test = load_obj('data_objects/encoded_test')
+    global data
+    data = load_obj('data_objects/data')
+    global encoder
+    encoder = load_obj('data_objects/encoder')
+
+    #Split
+    #Manual perturbations
+
+    #Generate a sample of the test set for feature perturbance
+    global X_test_holdout
+    X_test_holdout = load_obj('data_objects/X_test')
+    idx = np.random.choice(X_test_holdout.shape[0], 2000,
+                           replace=False)  #Random 2000 samples w/o replacements
+    X_test_holdout = X_test_holdout[idx]  #extract
+    X_test_holdout = pd.DataFrame(
+        encoder.transform(X_test_holdout).toarray(),
+        columns=features)  #Convert to DF for column names\
+    y_test_holdout = y_test[idx]
+    global X_train_shap
+    global X_test_shap
+    X_train_shap = pd.DataFrame(encoded_train.toarray(), columns=features)
+    X_test_shap = pd.DataFrame(encoder.transform(X_test).toarray(),
+                               columns=features)
+    global shap_values
+    shap_values = load_obj('data_objects/shap_values')  #Load Dict of Shap Values
+
+    global models
+    models = {
+        str(type(rfc)): ('Random Forest', shap_values[str(type(rfc))]),
+        str(type(gbc)):
+        ('Gradient Boosted Classifier', shap_values[str(type(gbc))]),
+        str(type(logit)): ('Logistic Regression', shap_values[str(type(logit))]),
+        str(type(sk_ann)):
+        ('Sklearn MultiLayer Perceptron', shap_values[str(type(sk_ann))]),
+        str(type(keras_ann)):
+        ('Keras Multilayer Perceptron', shap_values[str(type(keras_ann))])
+    }
+
+    global model_dict_2
+    model_dict_2 = {
+        'keras neural network': keras_ann,
+        'logistic regression': logit,
+        'random forest': rfc,
+        'gradient boosted trees': gbc,
+        'sklearn neural network' : sk_ann
+    }

@@ -65,3 +65,13 @@ A few examples.
   - toggles: models, clusters, and number of observations
   - Running GAM on > 200 sets of shap values is slow.
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/gam_jpg.PNG "Logo Title Text 1")  
+
+### There are 3 different blocks of code that run some form of GAM
+  - The first block runs the Keras Neural Net's full (4000) shap values through GAM & displays feature importance w/ 2 explanations.
+      This took about 8 hours to run, so k = 2 was the only iteration I ran.
+  - The second block adds functionality for on the fly testing. You can toggle the model and the number of observations to display feature importance.
+  - The last block allows for the use of various attribution values inplace of Shap values. Such options include
+    - Grad * Input
+    - Saliency Maps
+    - Layerwise Relevance Propogation
+    - Integrated Gradients
