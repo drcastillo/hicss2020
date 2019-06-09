@@ -271,19 +271,25 @@ rfc_shapvalues_abs = pd.DataFrame(shap_values[str(type(rfc))], columns = feature
 logit_shapvalues_abs = pd.DataFrame(shap_values[str(type(logit))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/logit_shapvalues_abs.csv')
 gbc_shapvalues_abs = pd.DataFrame(shap_values[str(type(gbc))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_abs.csv')
 keras_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_abs.csv')
+sk_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_abs.csv')
+
 rfc_shapvalues = pd.DataFrame(shap_values[str(type(rfc))], columns = features).sum().to_csv('obj/lendingclub/shap/rfc_shapvalues_sum.csv')
 logit_shapvalues = pd.DataFrame(shap_values[str(type(logit))], columns = features).sum().to_csv('obj/lendingclub/shap/logit_shapvalues_sum.csv')
 gbc_shapvalues = pd.DataFrame(shap_values[str(type(gbc))], columns = features).sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_sum.csv')
 keras_ann_shapvalues = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_sum.csv')
+sk_ann_shapvalues = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_sum.csv')
 
 rfc_shapvalues_abs = pd.DataFrame(shap_values[str(type(rfc))], columns = features).abs().sum()
 logit_shapvalues_abs = pd.DataFrame(shap_values[str(type(logit))], columns = features).abs().sum()
 gbc_shapvalues_abs = pd.DataFrame(shap_values[str(type(gbc))], columns = features).abs().sum()
 keras_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).abs().sum()
+sk_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).abs().sum()
+
 combined_shap = pd.DataFrame(rfc_shapvalues_abs, columns= ['rfc'])
 combined_shap['logit'] = logit_shapvalues_abs
 combined_shap['gbc'] = gbc_shapvalues_abs
-combined_shap['nn'] = keras_ann_shapvalues_abs
+combined_shap['keras_ann'] = keras_ann_shapvalues_abs
+combined_shap['sk_ann'] = sk_ann_shapvalues_abs
 combined_shap.to_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv')
 
 
@@ -291,10 +297,15 @@ rfc_shapvalues = pd.DataFrame(shap_values[str(type(rfc))], columns = features).s
 logit_shapvalues = pd.DataFrame(shap_values[str(type(logit))], columns = features).sum()
 gbc_shapvalues = pd.DataFrame(shap_values[str(type(gbc))], columns = features).sum()
 keras_ann_shapvalues = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).sum()
+sk_ann_shapvalues = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).sum()
+
+
 combined_shap = pd.DataFrame(rfc_shapvalues, columns= ['rfc'])
 combined_shap['logit'] = logit_shapvalues
 combined_shap['gbc'] = gbc_shapvalues
-combined_shap['nn'] = keras_ann_shapvalues
+combined_shap['keras_ann'] = keras_ann_shapvalues
+combined_shap['sk_ann'] = sk_ann_shapvalues
+
 combined_shap.to_csv('obj/lendingclub/shap/All_Sum_ShapValues.csv')
 
 

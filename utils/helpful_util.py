@@ -19,10 +19,10 @@ from collections import Counter
 import pickle
 import sklearn
 from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold, learning_curve
-import tensorflow as tf
-from keras.models import Model
-from keras.layers import Flatten, Dense, Input
-from keras.preprocessing import image
+#import tensorflow as tf
+#from keras.models import Model
+#from keras.layers import Flatten, Dense, Input
+#from keras.preprocessing import image
 from keras.utils import layer_utils
 from keras.utils.data_utils import get_file
 from keras import backend as K
@@ -34,7 +34,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import resample
 import seaborn as sns
 from utils.load_objects import *
-
+from IPython.display import display, HTML
 
 def load_models_lendingclub():
     from sklearn.externals import joblib
@@ -321,16 +321,13 @@ def display_sklearn_feature_importance(data, set, features, n_features):
     temp = feature_importance.nlargest(n, 'RF_Feature_Importance')
     sns.barplot(temp['RF_Feature_Importance'], temp['feature'])
     plt.title('Random Forest - Feature Importance Top {}'.format(n_features))
-    plt.savefig('images/sklearn_feature_importance/RandomForest_{}features.png'.format(n_features), eps = 500)
     plt.show()
 
     temp = feature_importance.nlargest(n, 'GBC_Feature_Importance')
     sns.barplot(temp['GBC_Feature_Importance'], temp['feature'])
     plt.title('Gradient Boosted Classifier - Feature Importance Top {}'.format(
         n_features))
-    plt.savefig('images/sklearn_feature_importance/GradientBoosting_{}features.png'.format(n_features), eps = 500)
     plt.show()
-
 
     #We want to show the total possible feature impact here. Take the max of each feature in the training set by the logit coeff.
     lookup = pd.DataFrame(data.toarray(), columns=features).max()
@@ -340,7 +337,6 @@ def display_sklearn_feature_importance(data, set, features, n_features):
     sns.barplot(temp['coeff_max'], temp['feature'])
     plt.title('Logistic Regression - Coefficients Top&Bottom {}'.format(
         int(n_features / 2)))
-    plt.savefig('images/sklearn_feature_importance/Logit_{}features.png'.format(n_features), eps = 500)
     plt.show()
 
 
@@ -488,8 +484,8 @@ class Perturb():
         self.y = y
         self.data = data_str
 
-        self.a = [str(i) + '%' for i in range(0, 201) if i % 5 == 0]
-        self.b = [(i / 100) for i in range(0, 201) if i % 5 == 0]
+        self.a = [str(i) + '%' for i in range(50, 151) if i %10 == 0]
+        self.b = [(i / 100) for i in range(50, 151) if i %10 == 0]
         self.pertu = dict(zip(self.a, self.b))
         self.pert = [i for i in self.pertu.values()]
 
@@ -583,7 +579,6 @@ class Perturb():
         clone = self.X.copy()
         column = column
 
-
         rfc_preds = []
         gbc_preds = []
         logit_preds = []
@@ -612,29 +607,24 @@ class Perturb():
 
         fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
         if 'accuracy' in mode:
-            sns.lineplot(x=self.pert, y=rfc_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=gbc_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=logit_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=keras_ann_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=sk_ann_preds, ax=ax1)
-            ax1.set_ylabel('Accuracy %', fontsize=15)
-            ax1.set_title('Accuracy : {}'.format(
-            column.upper()),
-                      fontsize=25)
-            ax1.set_ylim(0,100)
+            model_preds = {'rfc' : rfc_preds, 'gbc' : gbc_preds, 'logit' : logit_preds, 'keras_ann' : keras_ann_preds, 'sklearn_ann' : sk_ann_preds}
+            for i in model_preds.keys():
+                sns.lineplot(x=self.pert, y=model_preds[i], ax=ax1)
+                ax1.set_ylabel('Accuracy %', fontsize=15)
+                ax1.set_title('Accuracy : {}'.format(
+                column.upper()),
+                          fontsize=25)
+                ax1.set_ylim(0,100)
 
         elif 'proportion' in mode:
-            sns.lineplot(x=self.pert, y=rfc_1_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=gbc_1_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=logit_1_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=keras_ann_1_preds, ax=ax1)
-            sns.lineplot(x=self.pert, y=keras_ann_1_preds, ax=ax1)
-
-            ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-            ax1.set_title('Proportionality of Predictions :{}'.format(
-            column.upper()),
-                      fontsize=25)
-            ax1.set_ylim(0,100)
+            model_1_preds = {'rfc' : rfc_1_preds, 'gbc' : gbc_1_preds, 'logit' : logit_1_preds, 'keras_ann' : keras_ann_1_preds, 'sklearn_ann' : sk_ann_1_preds}
+            for i in model_1_preds.keys():
+                sns.lineplot(x=self.pert, y=model_1_preds[i], ax=ax1)
+                ax1.set_ylabel('% of Predictions == 1', fontsize=15)
+                ax1.set_title('Proportionality of Predictions :{}'.format(
+                column.upper()),
+                          fontsize=25)
+                ax1.set_ylim(0,100)
 
 
         ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
@@ -644,6 +634,14 @@ class Perturb():
                        'Random Forest', 'Gradient Boosted Classifier',
                        'Logistic Regression', 'Keras Neural Network', 'Sklearn Neural Network'
                    ])
+        if 'accuracy' in mode:
+            temp = pd.DataFrame(model_preds).T
+        if 'proportion' in mode:
+            temp = pd.DataFrame(model_1_preds).T
+        temp.columns = self.a
+        print('\t\t\tTable Showing {} by {} perturbance percentage'.format(mode, column))
+        display(HTML(temp.to_html()))
+        print('-' * 125)
 
     def manual_perturb(self, column, scalar):
         '''
@@ -664,133 +662,44 @@ class Perturb():
         temp[column] = temp[column] * scalar
         print("Perturbing Feature: {} by {}".format(column,scalar))
         print('-' * 75)
-        print("\033[1m Random Forest \033[0m")
-        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(self.X))*100,4)
-        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(temp))*100,4)
-        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.rfc.predict(self.X))[1]))
-        print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.rfc.predict(temp))[1]))
+        models_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
+                 'Keras Neural Network']
+        models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
+        for i,j in zip(models_str, models):
+            print("\033[1m {} \033[0m".format(i))
+            try:
+                bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict(self.X))*100,4)
+                print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
+                aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict(temp))*100,4)
+                print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
+                print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict(self.X))[1]))
+                print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(j.predict(temp))[1]))
+                print('-' * 75)
+            except:
+                bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict_classes(self.X))*100,4)
+                print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
+                aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict_classes(temp))*100,4)
+                print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
+                print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict_classes(self.X))[1]))
+                print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(j.predict_classes(temp))[1]))
 
-
-        print("\n\033[1m Gradient Boosted Classifier\033[0m")
-        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(self.X))*100,4)
-        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(temp))*100,4)
-        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.gbc.predict(self.X))[1]))
-        print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.gbc.predict(temp))[1]))
-
-        print("\n\033[1m Logistic Regression\033[0m")
-        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.logit.predict(self.X))*100,4)
-        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.logit.predict(temp))*100,4)
-        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.logit.predict(self.X))[1]))
-        print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.logit.predict(temp))[1]))
-
-        print("\n\033[1mSklearn Neural Network\033[0m")
-        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(self.X))*100,4)
-        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(temp))*100,4)
-        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.sk_ann.predict(self.X))[1]))
-        print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(self.sk_ann.predict(temp))[1]))
-
-        print("\n\033[1m Keras Neural Network\033[0m")
-        bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(self.X))*100,4)
-        print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-        aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(temp))*100,4)
-        print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-        print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(self.keras_ann.predict_classes(self.X))[1]))
-        print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(self.keras_ann.predict_classes(temp))[1]))
-        print('-' * 75)
 
 def display_abs_shapvalues(shapvalues, features, num_features):
-    rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
-    rfc_shapvalues_abs = pd.DataFrame(shapvalues[str(type(rfc))], columns = features).abs().sum()
-    logit_shapvalues_abs = pd.DataFrame(shapvalues[str(type(logit))], columns = features).abs().sum()
-    gbc_shapvalues_abs = pd.DataFrame(shapvalues[str(type(gbc))], columns = features).abs().sum()
-    keras_ann_shapvalues_abs = pd.DataFrame(shapvalues[str(type(keras_ann))], columns = features).abs().sum()
-    sk_ann_shapvalues_abs = pd.DataFrame(shapvalues[str(type(sk_ann))], columns = features).abs().sum()
-
-
-    combined_shap = pd.DataFrame(rfc_shapvalues_abs, columns= ['rfc'])
-    combined_shap['logit'] = logit_shapvalues_abs
-    combined_shap['gbc'] = gbc_shapvalues_abs
-    combined_shap['keras_nn'] = keras_ann_shapvalues_abs
-    combined_shap['sklearn_nn'] = sk_ann_shapvalues_abs
-
-    temp = combined_shap.nlargest(num_features, 'rfc')
-    sns.barplot(temp['rfc'], temp.index)
-    plt.title('Random Forest - Absolute Shap Values TOP {}'.format(num_features))
-    plt.show()
-
-    temp = combined_shap.nlargest(num_features, 'logit')
-    sns.barplot(temp['logit'], temp.index)
-    plt.title('Logistic Regression - Absolute Shap Values TOP {}'.format(num_features))
-    plt.show()
-
-    temp = combined_shap.nlargest(num_features, 'gbc')
-    sns.barplot(temp['gbc'], temp.index)
-    plt.title('Gradient Boosted Classifier - Absolute Shap Values TOP {}'.format(num_features))
-    plt.show()
-
-    temp = combined_shap.nlargest(num_features, 'keras_nn')
-    sns.barplot(temp['keras_nn'], temp.index)
-    plt.title('Keras Neural Network - Absolute Shap Values TOP {}'.format(num_features))
-    plt.show()
-
-    temp = combined_shap.nlargest(num_features, 'sklearn_nn')
-    sns.barplot(temp['sklearn_nn'], temp.index)
-    plt.title('Sklearn Neural Network - Absolute Shap Values TOP {}'.format(num_features))
-    plt.show()
+    combined_shap = pd.read_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv', index_col = 0)
+    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Keras Neural Network', 'Sklearn Neural Network']
+    for i,j in zip(combined_shap.columns, models_str):
+        temp = combined_shap.nlargest(num_features, i)
+        sns.barplot(temp[i], temp.index)
+        plt.title('{} - Absolute Shap Values TOP {}'.format(j, num_features))
+        plt.show()
 
 def display_shapvalues(shapvalues, features, n):
-    rfc, gbc, logit, keras_ann, sk_ann = load_models_lendingclub()
-    rfc_shapvalues = pd.DataFrame(shapvalues[str(type(rfc))], columns = features).sum()
-    logit_shapvalues = pd.DataFrame(shapvalues[str(type(logit))], columns = features).sum()
-    gbc_shapvalues = pd.DataFrame(shapvalues[str(type(gbc))], columns = features).sum()
-    keras_ann_shapvalues = pd.DataFrame(shapvalues[str(type(keras_ann))], columns = features).sum()
-    sk_ann_shapvalues = pd.DataFrame(shapvalues[str(type(sk_ann))], columns = features).sum()
-
-    combined_shap = pd.DataFrame(rfc_shapvalues, columns= ['rfc'])
-    combined_shap['logit'] = logit_shapvalues
-    combined_shap['gbc'] = gbc_shapvalues
-    combined_shap['keras_nn'] = keras_ann_shapvalues
-    combined_shap['sklearn_nn'] = sk_ann_shapvalues
-
-    temp = combined_shap.nlargest(int(n / 2), 'rfc')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'rfc')
-    temp = pd.concat([temp, temp1])
-    sns.barplot(temp['rfc'], temp.index)
-    plt.title('Random Forest Shap Values - Top&Bottom {}'.format(int(n / 2)))
-    plt.show()
-
-    temp = combined_shap.nlargest(int(n / 2), 'logit')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'logit')
-    temp = pd.concat([temp, temp1])
-    sns.barplot(temp['logit'], temp.index)
-    plt.title('Logistic Regression Shap Values - Top&Bottom {}'.format(int(n / 2)))
-    plt.show()
-
-    temp = combined_shap.nlargest(int(n / 2), 'gbc')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'gbc')
-    temp = pd.concat([temp, temp1])
-    sns.barplot(temp['gbc'], temp.index)
-    plt.title('Gradient Boosting Shap Values - Top&Bottom {}'.format(int(n / 2)))
-    plt.show()
-
-    temp = combined_shap.nlargest(int(n / 2), 'keras_nn')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'keras_nn')
-    temp = pd.concat([temp, temp1])
-    sns.barplot(temp['keras_nn'], temp.index)
-    plt.title('Keras Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
-    plt.show()
-
-    temp = combined_shap.nlargest(int(n / 2), 'sklearn_nn')
-    temp1 = combined_shap.nsmallest(int(n / 2), 'sklearn_nn')
-    temp = pd.concat([temp, temp1])
-    sns.barplot(temp['sklearn_nn'], temp.index)
-    plt.title('Sklearn Neural Network Shap Values - Top&Bottom {}'.format(int(n / 2)))
-    plt.show()
+    combined_shap = pd.read_csv('obj/lendingclub/shap/All_Sum_ShapValues.csv', index_col = 0)
+    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Keras Neural Network', 'Sklearn Neural Network']
+    for i,j in zip(combined_shap.columns, models_str):
+        temp = combined_shap.nlargest(int(n / 2), i)
+        temp1 = combined_shap.nsmallest(int(n / 2), i)
+        temp = pd.concat([temp, temp1])
+        sns.barplot(temp[i], temp.index)
+        plt.title('{} Shap Values - Top&Bottom {}'.format(j, int(n / 2)))
+        plt.show()
