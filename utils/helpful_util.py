@@ -639,7 +639,7 @@ class Perturb():
         if 'proportion' in mode:
             temp = pd.DataFrame(model_1_preds).T
         temp.columns = self.a
-        print('\t\t\tTable Showing {} by {} perturbance percentage'.format(mode, column))
+        print('\t\tTable Showing {} by {} perturbance percentage ***100 % is equivalent to the baseline {}%'.format(mode, column, mode))
         display(HTML(temp.to_html()))
         print('-' * 125)
 
