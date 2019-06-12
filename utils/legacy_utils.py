@@ -319,3 +319,59 @@ covLogit = np.linalg.inv(X_design.T @ V @ X_design)
 # Standard errors
 print("Standard errors: ", np.sqrt(np.diag(covLogit)))
 '''
+
+'''
+b = [(i / 100) for i in range(50, 151) if i %5 == 0]
+cols = X_test_holdout[continuous].columns
+temp1 = {}
+temp2 = {}
+dicts = []
+models_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network', 'Keras Neural Network']
+models = [rfc, gbc, logit, sk_ann, keras_ann]
+for c,k in zip(models_str, models):
+    temp1 = {}
+    for i in cols:
+        temp_2_list = []
+        for j in b:
+            clone = X_test_holdout.copy()
+            clone[i] = clone[i]  * j
+            try:
+                temp_2_list.append(sklearn.metrics.accuracy_score(y_test_holdout, k.predict(clone)))
+            except:
+                temp_2_list.append(sklearn.metrics.accuracy_score(y_test_holdout, k.predict_classes(clone)))
+        temp1[i] = temp_2_list
+    temp2[c] = temp1
+
+import collections
+b = [(i / 100) for i in range(50, 151) if i %5 == 0]
+cols = X_test_holdout[continuous].columns
+temp1 = {}
+temp2 = {}
+dicts = []
+models_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network', 'Keras Neural Network']
+models = [rfc, gbc, logit, sk_ann, keras_ann]
+for c,k in zip(models_str, models):
+    temp1 = {}
+    for i in cols:
+        temp_2_list = []
+        for j in b:
+            clone = X_test_holdout.copy()
+            clone[i] = clone[i]  * j
+            try:
+                temp_2_list.append(collections.Counter(k.predict(clone))[1] / y_test_holdout.shape[0])
+            except:
+                temp_2_list.append(collections.Counter(k.predict_classes(clone))[1] / y_test_holdout.shape[0])
+        temp1[i] = temp_2_list
+    temp2[c] = temp1
+'''
+'''
+#!pip install xlsxwriter
+writer = pd.ExcelWriter('proportion_multiple.xlsx', engine='xlsxwriter')
+mod = ['rfc','gbc', 'logit', 'sk_ann', 'keras_ann']
+counter = 1
+for i,j in zip(temp2.keys(), mod):
+    df = pd.DataFrame(temp2[i], index = [(i / 100) for i in range(50, 151) if i %5 == 0]).T
+    df.to_excel(writer, sheet_name = '{}Pert_Proportion'.format(j))
+    counter +=1
+writer.save()
+'''

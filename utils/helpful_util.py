@@ -684,6 +684,7 @@ class Perturb():
                 print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(j.predict_classes(temp))[1]))
 
 
+
 def display_abs_shapvalues(shapvalues, features, num_features):
     combined_shap = pd.read_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv', index_col = 0)
     models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Keras Neural Network', 'Sklearn Neural Network']
