@@ -6,27 +6,33 @@ Main work is done in the notebooks labelled 'explainability'
 
 These notebooks have many dependencies which making cloning a tad bit tedious.
 A few ways to go about this:
-- 1:
+- 2:
   - Clone the repo directly from github
     - Open up the lending club explainability notebook.
       - Uncomment-out the first line & run the first block of code. This pip installs all local dependencies from my environment:
         ```python
         !pip install -r requirements.txt --user
         ```
+- 1:
+  - You can pip install the following packages that you may not have installed. This should solve most of the dependecy issues:
+  ```python
+  pip install shap==0.28.5
+  pip install lime==0.1.1.33
+  pip install plotly #interactive graphing
+  pip install scikit-learn==0.21.1
+  pip install cufflinks==0.15 #more graphing utils
+  pip install seaborn
+  pip install ipywidgets #more graphing utils
+  ```
+  - 2. This is still buggy:
+    - Clone the repo directly from github
+      - Open up the lending club explainability notebook.
+        - Uncomment-out the first line & run the first block of code. This pip installs all local dependencies from my environment:
+          ```python
+          !pip install -r requirements.txt --user
+          ```
 
-- 2:
-  - Clone the repo directly from github
-    - Go into conda prompt and change directory to the repo path:
-    ```python
-    cd <path>
-    ```
-      - run the following to create a new conda virtual environment, building on requirements.text
-      ```python
-      #Your environment name goes inside brackets
-      conda create --name <env_name> --file requirements.txt
-      activate <env_name>
-      ```
-        - Launch Jupyter notebook within the activated environment
+
  - 3:
    - The First 2 blocks of code deal with functions w/ global dependencies and the loading of all data objects.
     Objects were stored locally during model training to cut down on load times.
