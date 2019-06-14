@@ -19,12 +19,7 @@ A few ways to go about this:
   pip install ipywidgets #more graphing utils
   ```
 - 2. This is still buggy:
-    - Clone the repo directly from github
-      - Open up the lending club explainability notebook.
-        - Uncomment-out the first line & run the first block of code. This pip installs all local dependencies from my environment:
-          ```python
-          !pip install -r requirements.txt --user
-          ```
+    - You can access the notebook built on images of the git repo @ https://mybinder.org/v2/gh/drcastillo/hicss2020/master
 
 
  - 3:
