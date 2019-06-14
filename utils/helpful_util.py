@@ -388,7 +388,7 @@ class ExplainShap():
                 Random Forest: rfc
                 Gradient Boosted Classifier: gbc
                 Logistic Regression: logit
-                Keras Neural Network = keras_ann
+                Multilayer Perceptron = keras_ann
                 Sklearn Neural Network = sk_ann
             observation: int
 
@@ -423,7 +423,7 @@ class ExplainShap():
             Random Forest: rfc
             Gradient Boosted Classifier: gbc
             Logistic Regression: logit
-            Keras Neural Network = keras_ann
+            Multilayer Perceptron = keras_ann
             Sklearn Neural Network = sk_ann
         Returns:
         Global Shap Explanations over test set
@@ -447,7 +447,7 @@ class ExplainShap():
                 Random Forest: rfc
                 Gradient Boosted Classifier: gbc
                 Logistic Regression: logit
-                Keras Neural Network = keras_ann
+                Multilayer Perceptron = keras_ann
                 Sklearn Neural Network = sk_ann
         Returns:
         Global Shap Explanations over test set - Summary
@@ -632,7 +632,7 @@ class Perturb():
                    loc='lower right',
                    labels=[
                        'Random Forest', 'Gradient Boosted Classifier',
-                       'Logistic Regression', 'Keras Neural Network', 'Sklearn Neural Network'
+                       'Logistic Regression', 'Multilayer Perceptron', 'Sklearn Neural Network'
                    ])
         if 'accuracy' in mode:
             temp = pd.DataFrame(model_preds).T
@@ -663,7 +663,7 @@ class Perturb():
         print("Perturbing Feature: {} by {}".format(column,scalar))
         print('-' * 75)
         models_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
-                 'Keras Neural Network']
+                 'Multilayer Perceptron']
         models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
         for i,j in zip(models_str, models):
             print("\033[1m {} \033[0m".format(i))
@@ -687,7 +687,7 @@ class Perturb():
 
 def display_abs_shapvalues(shapvalues, features, num_features):
     combined_shap = pd.read_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv', index_col = 0)
-    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Keras Neural Network', 'Sklearn Neural Network']
+    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Multilayer Perceptron', 'Sklearn Neural Network']
     for i,j in zip(combined_shap.columns, models_str):
         temp = combined_shap.nlargest(num_features, i)
         sns.barplot(temp[i], temp.index)
@@ -696,7 +696,7 @@ def display_abs_shapvalues(shapvalues, features, num_features):
 
 def display_shapvalues(shapvalues, features, n):
     combined_shap = pd.read_csv('obj/lendingclub/shap/All_Sum_ShapValues.csv', index_col = 0)
-    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Keras Neural Network', 'Sklearn Neural Network']
+    models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Multilayer Perceptron', 'Sklearn Neural Network']
     for i,j in zip(combined_shap.columns, models_str):
         temp = combined_shap.nlargest(int(n / 2), i)
         temp1 = combined_shap.nsmallest(int(n / 2), i)
