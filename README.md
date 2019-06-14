@@ -6,13 +6,7 @@ Main work is done in the notebooks labelled 'explainability'
 
 These notebooks have many dependencies which making cloning a tad bit tedious.
 A few ways to go about this:
-- 2:
-  - Clone the repo directly from github
-    - Open up the lending club explainability notebook.
-      - Uncomment-out the first line & run the first block of code. This pip installs all local dependencies from my environment:
-        ```python
-        !pip install -r requirements.txt --user
-        ```
+
 - 1:
   - You can pip install the following packages that you may not have installed. This should solve most of the dependecy issues:
   ```python
@@ -24,7 +18,7 @@ A few ways to go about this:
   pip install seaborn
   pip install ipywidgets #more graphing utils
   ```
-  - 2. This is still buggy:
+- 2. This is still buggy:
     - Clone the repo directly from github
       - Open up the lending club explainability notebook.
         - Uncomment-out the first line & run the first block of code. This pip installs all local dependencies from my environment:
