@@ -692,6 +692,7 @@ def display_abs_shapvalues(shapvalues, features, num_features):
         temp = combined_shap.nlargest(num_features, i)
         sns.barplot(temp[i], temp.index)
         plt.title('{} - Absolute Shap Values TOP {}'.format(j, num_features))
+        plt.savefig('images/shap_summed_values/{} - Absolute Shap Values TOP {}'.format(j, num_features), eps = 1000, bbox_inches = "tight")
         plt.show()
 
 def display_shapvalues(shapvalues, features, n):
@@ -703,4 +704,5 @@ def display_shapvalues(shapvalues, features, n):
         temp = pd.concat([temp, temp1])
         sns.barplot(temp[i], temp.index)
         plt.title('{} Shap Values - Top&Bottom {}'.format(j, int(n / 2)))
+        plt.savefig('images/shap_summed_values/{} - Summed Shap Values Top&Bottom {}'.format(j, int(n / 2)), eps = 1000, bbox_inches = "tight")
         plt.show()

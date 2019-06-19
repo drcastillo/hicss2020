@@ -1,0 +1,88 @@
+Term: 36 months,484.32966114643426
+Term: 60 months,-700.037573438949
+Loan_Grade:A,273.90079822602456
+Loan_Grade:B,88.26337169023087
+Loan_Grade:C,-650.9798796089323
+Loan_Grade:D,-512.0532095311062
+Loan_Grade:E,-199.3880330528453
+Loan_Grade:F,-32.30075171350949
+Loan_Grade:G,-13.46867361100659
+Loan_SubGrade:A1,38.692123760276736
+Loan_SubGrade:A2,34.268742972234385
+Loan_SubGrade:A3,17.259032714954017
+Loan_SubGrade:A4,0.0434626233893286
+Loan_SubGrade:A5,-11.736566864045514
+Loan_SubGrade:B1,45.467714827714374
+Loan_SubGrade:B2,50.06484708975229
+Loan_SubGrade:B3,21.759113987491048
+Loan_SubGrade:B4,-1.2879489680170848
+Loan_SubGrade:B5,-46.212347352606194
+Loan_SubGrade:C1,50.63672572580838
+Loan_SubGrade:C2,2.8779172651417633
+Loan_SubGrade:C3,-19.125071133649108
+Loan_SubGrade:C4,-54.77247042941018
+Loan_SubGrade:C5,-96.70784975555536
+Loan_SubGrade:D1,20.06143283704457
+Loan_SubGrade:D2,-0.12491803389991431
+Loan_SubGrade:D3,-21.130319036643527
+Loan_SubGrade:D4,-55.85051936502044
+Loan_SubGrade:D5,-68.42596600754784
+Loan_SubGrade:E1,12.394175631162673
+Loan_SubGrade:E2,0.0
+Loan_SubGrade:E3,-10.2111834956428
+Loan_SubGrade:E4,-15.010078756007552
+Loan_SubGrade:E5,-36.302642107452925
+Loan_SubGrade:F1,0.0
+Loan_SubGrade:F2,0.0
+Loan_SubGrade:F3,0.03557031090256582
+Loan_SubGrade:F4,0.0
+Loan_SubGrade:F5,0.0
+Loan_SubGrade:G1,0.0
+Loan_SubGrade:G2,0.0
+Loan_SubGrade:G3,0.0
+Loan_SubGrade:G4,0.0
+Loan_SubGrade:G5,0.0
+Employment_Length:1 year,-0.07705135462672119
+Employment_Length:10+ years,-1.1370450140432646
+Employment_Length:2 years,0.13059745655411903
+Employment_Length:3 years,-0.39783854566853716
+Employment_Length:4 years,-1.2139148797328574
+Employment_Length:5 years,-0.2076191983014241
+Employment_Length:6 years,-0.018386417924430534
+Employment_Length:7 years,-0.07030140808292687
+Employment_Length:8 years,-0.6466091487426295
+Employment_Length:9 years,-0.01767292084666182
+Employment_Length:< 1 year,-0.34990226670598606
+Employment_Length:nan,-3.6187588577404637
+Home_Ownership:ANY,-0.0690257000598444
+Home_Ownership:MORTGAGE,-24.303692316437207
+Home_Ownership:OWN,-10.172952821713052
+Home_Ownership:RENT,-36.9308018374681
+Loan_Title:Business,-0.12043451706943126
+Loan_Title:Car financing,0.13317876125979716
+Loan_Title:Credit card refinancing,0.20180504808696828
+Loan_Title:Debt consolidation,0.42238636518349226
+Loan_Title:Green loan,0.0
+Loan_Title:Home buying,0.007442458574202754
+Loan_Title:Home improvement,-1.6115054913109064
+Loan_Title:Major purchase,-0.4384788353322052
+Loan_Title:Medical expenses,-1.0275482928324846
+Loan_Title:Moving and relocation,-0.5630945481000058
+Loan_Title:Other,-0.2067628321342509
+Loan_Title:Vacation,0.12049397372757814
+loan_amnt,0.2574868285736511
+int_rate,-434.02438254922043
+installment,-0.5956149566281426
+annual_inc,-0.7822974532261259
+inq_last_6mths,-1.0675332879386106
+revol_bal,0.300055481840697
+total_pymnt,-39.450117596094344
+total_rec_late_fee,-27.05185003730266
+last_pymnt_amnt,17.79882308172653
+acc_open_past_24mths,-4.011066861292008
+delinq_amnt,-0.050328520183568815
+tax_liens,0.0
+tot_hi_cred_lim,-1.853574914172403
+total_bal_ex_mort,-1.8570187852237567
+total_bc_limit,-1.1391841909550122
+total_il_high_credit_limit,3.0433980506741336
