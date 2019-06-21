@@ -418,7 +418,7 @@ class ExplainShap():
 
 
 
-def display_abs_shapvalues(shapvalues, features, num_features):
+def display_abs_shapvalues(features, num_features):
     combined_shap = pd.read_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv', index_col = 0)
     models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Multilayer Perceptron', 'Sklearn Neural Network']
     for i,j in zip(combined_shap.columns, models_str):
@@ -428,7 +428,7 @@ def display_abs_shapvalues(shapvalues, features, num_features):
         plt.savefig('images/shap_summed_values/{} - Absolute Shap Values TOP {}'.format(j, num_features), eps = 1000, bbox_inches = "tight")
         plt.show()
 
-def display_shapvalues(shapvalues, features, n):
+def display_shapvalues(features, n):
     combined_shap = pd.read_csv('obj/lendingclub/shap/All_Sum_ShapValues.csv', index_col = 0)
     models_str = ['Random Forest', 'Logistic Regression','Gradient Boosted Classifier', 'Multilayer Perceptron', 'Sklearn Neural Network']
     for i,j in zip(combined_shap.columns, models_str):

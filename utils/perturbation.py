@@ -253,6 +253,7 @@ class Perturb():
                 print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict_classes(self.X))[1]))
                 print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(j.predict_classes(temp))[1]))
     def categorical_perturb_loangrade(self,column, grouping):
+        print("Perturbing column: {}".format(column))
         b = [(i / 100) for i in range(0, 101) if i %10 == 0]
         model_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
                  'Multilayer Perceptron']
@@ -289,5 +290,5 @@ class Perturb():
             test_dict_df[i] = pd.DataFrame(scores_dict1_logit[i]).mean().values
         test_dict_df = test_dict_df.T
         test_dict_df = test_dict_df / 2000
-        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %5 == 0]
+        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %10 == 0]
         return test_dict_df
