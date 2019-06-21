@@ -3,8 +3,8 @@
 
 # Reference:
 
-from __future__ import print_function
-from utils.heaton_utils import *
+#from __future__ import print_function
+#from utils.heaton_utils import *
 
 import numpy as np
 import warnings
@@ -19,54 +19,16 @@ from collections import Counter
 import pickle
 import sklearn
 from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold, learning_curve
-#import tensorflow as tf
-#from keras.models import Model
-#from keras.layers import Flatten, Dense, Input
-#from keras.preprocessing import image
-from keras.utils import layer_utils
-from keras.utils.data_utils import get_file
-from keras import backend as K
-from keras.engine.topology import get_source_inputs
+
 from keras.models import load_model
 from keras.models import model_from_json
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.utils import resample
+
 import seaborn as sns
-from utils.load_objects import *
 from IPython.display import display, HTML
-
-def load_models_lendingclub():
-    from sklearn.externals import joblib
-    from keras.models import load_model
-    rf_file = "models/LendingClub/random_forest.pkl"
-    gbc_file = "models/LendingClub/GBC.pkl"
-    logit_file = "models/LendingClub/Logit.pkl"
-    sklearn_nn_file = "models/LendingClub/SklearnNeuralNet.pkl"
-    keras_ann_file = "models/LendingClub/ann_deepexplain.h5"
-
-    rfc = joblib.load(rf_file)
-    gbc = joblib.load(gbc_file)
-    logit = joblib.load(logit_file)
-    keras_ann = load_model(keras_ann_file)
-    sk_ann = joblib.load(sklearn_nn_file)
-    return rfc, gbc, logit, keras_ann, sk_ann
-
-def load_models_uci():
-    from sklearn.externals import joblib
-    from keras.models import load_model
-    sklearn_nn_file = 'models/UCI_Census/SklearnNeuralNet.pkl'
-    keras_ann_file = 'models/UCI_Census/ann_deepexplain.h5'
-    rf_file = "models/UCI_Census/random_forest.pkl"
-    gbc_file = "models/UCI_Census/GBC.pkl"
-    logit_file = "models/UCI_Census/Logit.pkl"
-
-    rfc = joblib.load(rf_file)
-    gbc = joblib.load(gbc_file)
-    logit = joblib.load(logit_file)
-    keras_ann = load_model(keras_ann_file)
-    sk_ann = joblib.load(sklearn_nn_file)
-    return rfc, gbc, logit, keras_ann, sk_ann
+from sklearn.metrics import classification_report
+from utils.perturbation import load_models_lendingclub
+from IPython.display import display_html, display, HTML
 
 class KerasModelUtil:
 
@@ -340,18 +302,6 @@ def display_sklearn_feature_importance(data, set, features, n_features):
     plt.show()
 
 
-def get_shap_values(model):
-    if type(model) == keras.engine.training.Model:
-        f = lambda x: model.predict(x)[:, 1]
-    else:
-        f = lambda x: model.predict_proba(x)[:, 1]
-    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
-    explainer = shap.KernelExplainer(f, med)
-    shap_values = explainer.shap_values(X_test_shap, samples =500)
-    return shap_values
-
-
-
 
 class ExplainShap():
 
@@ -466,223 +416,6 @@ class ExplainShap():
                                  plot_type="dot")
 
 
-class Perturb():
-    def __init__(self, X, y, data_str):
-        '''
-        Parameters:
-            X: df;
-                pass in X_test_holdout dataframe
-            y: df;
-                pass in y_test_holdout dataframe
-            data_str: str;
-                'uci' if using census data, 'lending' if using lending club data
-        Example:
-            p = Perturb(X_test_holdout, y_test_holdout, data_str= 'uci')
-            p.manual_perturb(column='age',scalar=1.1)
-        '''
-        self.X = X
-        self.y = y
-        self.data = data_str
-
-        self.a = [str(i) + '%' for i in range(50, 151) if i %10 == 0]
-        self.b = [(i / 100) for i in range(50, 151) if i %10 == 0]
-        self.pertu = dict(zip(self.a, self.b))
-        self.pert = [i for i in self.pertu.values()]
-
-        from utils.load_objects import load_models_lendingclub, load_models_uci
-        if 'uci' in self.data:
-            self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_uci()
-        elif 'lending' in self.data:
-            self.rfc, self.gbc, self.logit, self.keras_ann, self.sk_ann = load_models_lendingclub()
-
-    def perturb_graph_int(self, model, mode, column):
-        '''
-        Parameters:
-            model: object,
-                Random Forest: rfc
-                Gradient Boosted Classifier: gbc
-                Logistic Regression: logit
-            column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
-            title: str; pass title of graph
-
-        Returns:
-            Forecasting Graph based on perturbed features.
-
-        '''
-        import collections
-        import sklearn
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        clone = self.X.copy()
-        column = column
-
-
-        preds = []
-        mean = []
-        num_of_1s = []
-        for i in self.pert:
-            clone[column] = self.X[column] * (i)
-            mean.append(str(column) + ':' + str(np.round(clone[column].mean())))
-
-            if type(model) ==keras.engine.sequential.Sequential:
-                preds.append(sklearn.metrics.accuracy_score(self.y, model.predict_classes(clone))* 100)
-                num_of_1s.append((collections.Counter(model.predict_classes(clone))[1] / self.y.shape[0]) *100)
-            else:
-                preds.append(sklearn.metrics.accuracy_score(self.y, model.predict(clone))* 100)
-                num_of_1s.append((collections.Counter(model.predict(clone))[1] / self.y.shape[0]) *100)
-
-        fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
-        if 'accuracy' in mode:
-            sns.lineplot(x=self.pert, y=preds, ax=ax1)
-            ax1.set_ylabel('Accuracy %', fontsize=15)
-            ax1.set_title('Accuracy :{}'.format(
-            column.upper()),
-                      fontsize=25)
-            ax1.set_ylim(0,100)
-        elif 'proportion' in mode:
-            sns.lineplot(x=self.pert, y=num_of_1s, ax=ax1)
-            ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-            ax1.set_title('Proportionality of Predictions :{}'.format(
-            column.upper()),
-                      fontsize=25)
-            ax1.set_ylim(0,100)
-
-        ax1.set_xlabel('{} Perturbation'.format(column.upper()), fontsize=15)
-
-
-        if isinstance(column, str):
-            for i, txt in enumerate(mean):
-                if i % 5 == 0:
-                    if 'accuracy' in mode:
-                        ax1.annotate(txt, (self.pert[i], preds[i]))
-                    if 'proportion' in mode:
-                        ax1.annotate(txt, (self.pert[i], num_of_1s[i]))
-
-    def perturb_graph_cons_int(self, mode, column):
-
-        '''
-        Parameters:
-            mode: str;
-                'accuracy' : Y Axis = Percent of Correct Predictions
-                'proportion' : Percentage of Class 1 Predictions / Total length of Y_test
-            column: pass dataframe column, e.g, age, fnlwgt etc. Can pass a list of columns, e.g., ['age', 'fnlwgt']
-            title: str; pass title of graph
-
-        Returns:
-            Perturbed Input Graph. Shows all models simultaneously, as opposed to the above
-
-        '''
-        import collections
-        import sklearn
-        import matplotlib.pyplot as plt
-        import seaborn as sns
-        clone = self.X.copy()
-        column = column
-
-        rfc_preds = []
-        gbc_preds = []
-        logit_preds = []
-        keras_ann_preds = []
-        sk_ann_preds = []
-
-        rfc_1_preds =[]
-        gbc_1_preds =[]
-        logit_1_preds =[]
-        keras_ann_1_preds = []
-        sk_ann_1_preds = []
-        for i in self.pert:
-            clone[column] = self.X[column] * (i)
-
-            rfc_preds.append(sklearn.metrics.accuracy_score(self.y, self.rfc.predict(clone))*100)
-            gbc_preds.append(sklearn.metrics.accuracy_score(self.y, self.gbc.predict(clone))*100)
-            logit_preds.append(sklearn.metrics.accuracy_score(self.y, self.logit.predict(clone))*100)
-            keras_ann_preds.append(sklearn.metrics.accuracy_score(self.y, self.keras_ann.predict_classes(clone))* 100)
-            sk_ann_preds.append(sklearn.metrics.accuracy_score(self.y, self.sk_ann.predict(clone))*100)
-
-            rfc_1_preds.append((collections.Counter(self.rfc.predict(clone))[1] / self.y.shape[0]) *100)
-            gbc_1_preds.append((collections.Counter(self.gbc.predict(clone))[1] / self.y.shape[0]) *100)
-            logit_1_preds.append((collections.Counter(self.logit.predict(clone))[1] / self.y.shape[0]) *100)
-            keras_ann_1_preds.append((collections.Counter(self.keras_ann.predict_classes(clone))[1] / self.y.shape[0]) *100)
-            sk_ann_1_preds.append((collections.Counter(self.sk_ann.predict(clone))[1] / self.y.shape[0]) *100)
-
-        fig, ax1 = plt.subplots(1, 1, figsize=(15, 4))
-        if 'accuracy' in mode:
-            model_preds = {'rfc' : rfc_preds, 'gbc' : gbc_preds, 'logit' : logit_preds, 'keras_ann' : keras_ann_preds, 'sklearn_ann' : sk_ann_preds}
-            for i in model_preds.keys():
-                sns.lineplot(x=self.pert, y=model_preds[i], ax=ax1)
-                ax1.set_ylabel('Accuracy %', fontsize=15)
-                ax1.set_title('Accuracy : {}'.format(
-                column.upper()),
-                          fontsize=25)
-                ax1.set_ylim(0,100)
-
-        elif 'proportion' in mode:
-            model_1_preds = {'rfc' : rfc_1_preds, 'gbc' : gbc_1_preds, 'logit' : logit_1_preds, 'keras_ann' : keras_ann_1_preds, 'sklearn_ann' : sk_ann_1_preds}
-            for i in model_1_preds.keys():
-                sns.lineplot(x=self.pert, y=model_1_preds[i], ax=ax1)
-                ax1.set_ylabel('% of Predictions == 1', fontsize=15)
-                ax1.set_title('Proportionality of Predictions :{}'.format(
-                column.upper()),
-                          fontsize=25)
-                ax1.set_ylim(0,100)
-
-
-        ax1.set_xlabel('{} Perturbation'.format(column), fontsize=15)
-        plt.legend(title='Model',
-                   loc='lower right',
-                   labels=[
-                       'Random Forest', 'Gradient Boosted Classifier',
-                       'Logistic Regression', 'Multilayer Perceptron', 'Sklearn Neural Network'
-                   ])
-        if 'accuracy' in mode:
-            temp = pd.DataFrame(model_preds).T
-        if 'proportion' in mode:
-            temp = pd.DataFrame(model_1_preds).T
-        temp.columns = self.a
-        print('\t\tTable Showing {} by {} perturbance percentage ***100 % is equivalent to the baseline {}%'.format(mode, column, mode))
-        display(HTML(temp.to_html()))
-        print('-' * 125)
-
-    def manual_perturb(self, column, scalar):
-        '''
-        Parameters
-            X: X test DataFrame
-            y: y test Dataframe
-            set: str;
-                'lendingclub' - load lending club models
-                'uci' - load uci models
-            column: str; feature of interest
-            scalar: float; multiplier
-        Returns:
-            To String
-        '''
-        import collections
-        import sklearn
-        temp = self.X.copy()
-        temp[column] = temp[column] * scalar
-        print("Perturbing Feature: {} by {}".format(column,scalar))
-        print('-' * 75)
-        models_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
-                 'Multilayer Perceptron']
-        models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
-        for i,j in zip(models_str, models):
-            print("\033[1m {} \033[0m".format(i))
-            try:
-                bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict(self.X))*100,4)
-                print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-                aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict(temp))*100,4)
-                print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-                print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict(self.X))[1]))
-                print("\tNumber of '1' Predictions, After Perturbation: {}".format(collections.Counter(j.predict(temp))[1]))
-                print('-' * 75)
-            except:
-                bef_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict_classes(self.X))*100,4)
-                print("\tBefore Perturbation, Accuracy: {}%".format(bef_acc))
-                aft_acc = np.round(sklearn.metrics.accuracy_score(self.y, j.predict_classes(temp))*100,4)
-                print("\tAfter Perturbation, Accuracy: {}%".format(aft_acc))
-                print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict_classes(self.X))[1]))
-                print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(j.predict_classes(temp))[1]))
-
 
 
 def display_abs_shapvalues(shapvalues, features, num_features):
@@ -706,3 +439,38 @@ def display_shapvalues(shapvalues, features, n):
         plt.title('{} Shap Values - Top&Bottom {}'.format(j, int(n / 2)))
         plt.savefig('images/shap_summed_values/{} - Summed Shap Values Top&Bottom {}'.format(j, int(n / 2)), eps = 1000, bbox_inches = "tight")
         plt.show()
+
+def get_best_score(x, y):
+    try:
+        return sklearn.metrics.accuracy_score(x, y.predict(encoded_test))
+    except:
+        return sklearn.metrics.accuracy_score(x, keras_ann.predict_classes(encoded_test.toarray()))
+
+def get_shap_values(model):
+    if type(model) == keras.engine.training.Model:
+        f = lambda x: model.predict(x)[:, 1]
+    else:
+        f = lambda x: model.predict_proba(x)[:, 1]
+    med = X_train_shap.median().values.reshape((1, X_train_shap.shape[1]))
+    explainer = shap.KernelExplainer(f, med)
+    shap_values = explainer.shap_values(X_test_shap, samples =500)
+    return shap_values
+
+def display_side_by_side(*args):
+    html_str = ''
+    for df in args:
+        html_str += df.to_html()
+    display_html(html_str.replace('table', 'table style="display:inline"'),
+                 raw=True)
+
+def neg_pos_logit_coefficients(model, features):
+    logistic_regress_coeff = pd.DataFrame({
+        "features": features,
+        "Coef": model.coef_[0]
+    })
+
+    neg_coef = round(logistic_regress_coeff[
+        logistic_regress_coeff['Coef'] < 0].sort_values('Coef', ascending=True),2).head(15)
+    pos_coef = round(logistic_regress_coeff[
+        logistic_regress_coeff['Coef'] > 0].sort_values('Coef', ascending=False),2).head(15)
+    display_side_by_side(neg_coef, pos_coef)

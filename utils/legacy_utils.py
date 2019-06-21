@@ -263,27 +263,27 @@ save_obj(keras_ig_df, 'data_objects/keras_ig_df')
 
 '''
 
-'''
-
-
+#---------------------------------------------------------------------------------------------------------------
 #Dataframe Operations to concatenate all Shap Values into CSVs
-rfc_shapvalues_abs = pd.DataFrame(shap_values[str(type(rfc))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/rfc_shap_abs.csv')
-logit_shapvalues_abs = pd.DataFrame(shap_values[str(type(logit))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/logit_shapvalues_abs.csv')
-gbc_shapvalues_abs = pd.DataFrame(shap_values[str(type(gbc))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_abs.csv')
-keras_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_abs.csv')
-sk_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).abs().sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_abs.csv')
+#---------------------------------------------------------------------------------------------------------------
+'''
+rfc_shapvalues_abs = pd.DataFrame(shap_values[rfc], columns = unrolled_features).abs().sum().to_csv('obj/lendingclub/shap/rfc_shap_abs.csv')
+logit_shapvalues_abs = pd.DataFrame(shap_values[logit], columns = unrolled_features).abs().sum().to_csv('obj/lendingclub/shap/logit_shapvalues_abs.csv')
+gbc_shapvalues_abs = pd.DataFrame(shap_values[gbc], columns = unrolled_features).abs().sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_abs.csv')
+keras_ann_shapvalues_abs = pd.DataFrame(shap_values[keras_ann], columns = unrolled_features).abs().sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_abs.csv')
+sk_ann_shapvalues_abs = pd.DataFrame(shap_values[sk_ann], columns = unrolled_features).abs().sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_abs.csv')
 
-rfc_shapvalues = pd.DataFrame(shap_values[str(type(rfc))], columns = features).sum().to_csv('obj/lendingclub/shap/rfc_shapvalues_sum.csv')
-logit_shapvalues = pd.DataFrame(shap_values[str(type(logit))], columns = features).sum().to_csv('obj/lendingclub/shap/logit_shapvalues_sum.csv')
-gbc_shapvalues = pd.DataFrame(shap_values[str(type(gbc))], columns = features).sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_sum.csv')
-keras_ann_shapvalues = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_sum.csv')
-sk_ann_shapvalues = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_sum.csv')
+rfc_shapvalues = pd.DataFrame(shap_values[rfc], columns = unrolled_features).sum().to_csv('obj/lendingclub/shap/rfc_shapvalues_sum.csv')
+logit_shapvalues = pd.DataFrame(shap_values[logit], columns = unrolled_features).sum().to_csv('obj/lendingclub/shap/logit_shapvalues_sum.csv')
+gbc_shapvalues = pd.DataFrame(shap_values[gbc], columns = unrolled_features).sum().to_csv('obj/lendingclub/shap/gbc_shapvalues_sum.csv')
+keras_ann_shapvalues = pd.DataFrame(shap_values[keras_ann], columns = unrolled_features).sum().to_csv('obj/lendingclub/shap/keras_ann_shapvalues_sum.csv')
+sk_ann_shapvalues = pd.DataFrame(shap_values[sk_ann], columns = unrolled_features).sum().to_csv('obj/lendingclub/shap/sk_ann_shapvalues_sum.csv')
 
-rfc_shapvalues_abs = pd.DataFrame(shap_values[str(type(rfc))], columns = features).abs().sum()
-logit_shapvalues_abs = pd.DataFrame(shap_values[str(type(logit))], columns = features).abs().sum()
-gbc_shapvalues_abs = pd.DataFrame(shap_values[str(type(gbc))], columns = features).abs().sum()
-keras_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).abs().sum()
-sk_ann_shapvalues_abs = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).abs().sum()
+rfc_shapvalues_abs = pd.DataFrame(shap_values[rfc], columns = unrolled_features).abs().sum()
+logit_shapvalues_abs = pd.DataFrame(shap_values[logit], columns = unrolled_features).abs().sum()
+gbc_shapvalues_abs = pd.DataFrame(shap_values[gbc], columns = unrolled_features).abs().sum()
+keras_ann_shapvalues_abs = pd.DataFrame(shap_values[keras_ann], columns = unrolled_features).abs().sum()
+sk_ann_shapvalues_abs = pd.DataFrame(shap_values[sk_ann], columns = unrolled_features).abs().sum()
 
 combined_shap = pd.DataFrame(rfc_shapvalues_abs, columns= ['rfc'])
 combined_shap['logit'] = logit_shapvalues_abs
@@ -293,11 +293,11 @@ combined_shap['sk_ann'] = sk_ann_shapvalues_abs
 combined_shap.to_csv('obj/lendingclub/shap/All_Abs_Sum_ShapValues.csv')
 
 
-rfc_shapvalues = pd.DataFrame(shap_values[str(type(rfc))], columns = features).sum()
-logit_shapvalues = pd.DataFrame(shap_values[str(type(logit))], columns = features).sum()
-gbc_shapvalues = pd.DataFrame(shap_values[str(type(gbc))], columns = features).sum()
-keras_ann_shapvalues = pd.DataFrame(shap_values[str(type(keras_ann))], columns = features).sum()
-sk_ann_shapvalues = pd.DataFrame(shap_values[str(type(sk_ann))], columns = features).sum()
+rfc_shapvalues = pd.DataFrame(shap_values[rfc], columns = unrolled_features).sum()
+logit_shapvalues = pd.DataFrame(shap_values[logit], columns = unrolled_features).sum()
+gbc_shapvalues = pd.DataFrame(shap_values[gbc], columns = unrolled_features).sum()
+keras_ann_shapvalues = pd.DataFrame(shap_values[keras_ann], columns = unrolled_features).sum()
+sk_ann_shapvalues = pd.DataFrame(shap_values[sk_ann], columns = unrolled_features).sum()
 
 
 combined_shap = pd.DataFrame(rfc_shapvalues, columns= ['rfc'])
@@ -307,6 +307,8 @@ combined_shap['keras_ann'] = keras_ann_shapvalues
 combined_shap['sk_ann'] = sk_ann_shapvalues
 
 combined_shap.to_csv('obj/lendingclub/shap/All_Sum_ShapValues.csv')
+'''
+
 
 
 predProbs = logit.predict_proba(encoded_train.toarray())
