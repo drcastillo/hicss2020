@@ -32,8 +32,6 @@ This is a concatenation of model_train and explainability meant for reproducibil
 # Brief Function Descriptions
 Most functions were designed using Plotly to add interactivity and lessen dependency on manual parameter entry.
 A few examples.
-### Classification reports
-![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/classreport_jpg.PNG "Logo Title Text 1")
 
 ### Sklearn Feature Importance Graphs
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/sklearnfeatimp_jpg.PNG "Logo Title Text 1")
@@ -46,21 +44,18 @@ A few examples.
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/pert_graph_2.jpg "Logo Title Text 1")  
 
 ### Lime Local Explanations
-  - toggles: model and observation. Visualize Local explanation as you cycle through different models and different observations within the test set.
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/lime_local.jpg "Logo Title Text 1")  
 
 ### Shap Local Explanations
-  - toggles: model and observation. Visualize Local explanation as you cycle through different models and different observations within the test set.
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/shap_local.jpg "Logo Title Text 1")  
 
 ### Shap Summary Plots
-  - toggles: model. View density dotplots to visualize feature importance at a more global level
   ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/shap_summary.jpg "Logo Title Text 1")  
 
 ### GAM explanations
-  - toggles: models, clusters, and number of observations
-  - Running GAM on > 200 sets of shap values is slow.
-  ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/gam_jpg.PNG "Logo Title Text 1")  
+  ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/Explanation_BAD.png "Logo Title Text 1")  
+  ![alt text](https://github.com/drcastillo/hicss2020/blob/master/images/Explanation_GOOD.png "Logo Title Text 1")  
+
 
 ### References
 1. Ancona, M., Ceolini, E., Gross, M. A unified view of gradient-based attribution methods for deep neural networks. ArXiv 2017.
