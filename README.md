@@ -1,6 +1,5 @@
 # hicss2020
 Repo for the work required for the HICSS conference.
-We survey current start of the art methods in machine learning explainability (XAI),namely, Shap, Lime and Gam.
 
 # Getting Started
 
