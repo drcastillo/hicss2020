@@ -55,7 +55,7 @@ class ExplainShap():
                 Logistic Regression: logit
                 Multilayer Perceptron = keras_ann
                 Sklearn Neural Network = sk_ann
-            observation: int
+            observation: int (Range: 0:4000)
 
         Returns:
             Local Shap Explanation

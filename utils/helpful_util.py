@@ -29,6 +29,8 @@ from IPython.display import display, HTML
 from sklearn.metrics import classification_report
 from utils.perturbation import load_models_lendingclub
 from IPython.display import display_html, display, HTML
+import lime.lime_tabular
+import lime
 
 class KerasModelUtil:
 

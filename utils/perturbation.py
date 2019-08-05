@@ -253,8 +253,8 @@ class Perturb():
                 print("\tNumber of '1' Predictions, Before Perturbation: {}".format(collections.Counter(j.predict_classes(self.X))[1]))
                 print("\tNumber of '1' Predictions, After Perturbation: {}\n".format(collections.Counter(j.predict_classes(temp))[1]))
     def categorical_perturb_loangrade(self,column, grouping):
-        print("Perturbing column: {}".format(column))
-        b = [(i / 100) for i in range(0, 101) if i %10 == 0]
+        #print("Perturbing column: {}".format(column))
+        b = [(i / 100) for i in range(0, 101) if i %20 == 0]
         model_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
                  'Multilayer Perceptron']
         models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
@@ -270,10 +270,10 @@ class Perturb():
                 test = self.X.copy()
                 scores = []
                 counter = 0
-                while counter < 1:
+                while counter < 10:
                     idx_0s = test.index[test[col] == 0].tolist() #find all 0 indices
                     idx_1s = test.index[test[col] == 1].tolist() #find all 1 indices
-                    idx = np.random.choice(idx_0s, int(len(idx_1s) *i), replace = False)#random select n indices from 0 indices
+                    idx = np.random.choice(idx_0s, int(len(idx_1s) *i), replace = True)#random select n indices from 0 indices
                     test[col].iloc[idx,] = 1 #change n indices from 0 to 1
                     test[cols].iloc[idx,] = 0 #change n indices from 1 to 0
                     try:
@@ -289,6 +289,146 @@ class Perturb():
         for i in scores_dict1_logit.keys():
             test_dict_df[i] = pd.DataFrame(scores_dict1_logit[i]).mean().values
         test_dict_df = test_dict_df.T
-        test_dict_df = test_dict_df / 2000
-        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %10 == 0]
+        #test_dict_df = test_dict_df / 2000
+        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %20 == 0]
+        return test_dict_df
+    def categorical_perturb_loangrade_overloaded(self,column, grouping, sub_column, subgrouping):
+        test = self.X.copy()
+
+        b = [(i / 100) for i in range(0, 101) if i %20 == 0] #Step by sample size: 0:100, 10
+
+        model_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
+                 'Multilayer Perceptron']
+        models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
+
+        col = column #Get Target Column
+        cols = [i for i in self.X.columns if grouping in i] #Extract grouping cols
+
+        sub_col = sub_column #Get Target SubColumn
+        sub_cols = [i for i in self.X.columns if subgrouping in i] #Extract Sub-grouping cols
+
+        #print("Perturbing column: {} \nPerturbing Subcolumn : {}".format(column, sub_column))
+        #print('{} LoanGradeA'.format(len(test.index[test[col] == 1].tolist())))
+        #print('{} Non-LoanGradeA'.format(len(test.index[test[col] == 0].tolist())))
+        #print('{} LoanSubGradeA'.format(len(test.index[test[sub_column] == 1].tolist())))
+        #print('{} Non-LoanSubGradeA'.format(len(test.index[test[sub_column] == 0].tolist())))
+
+        #print('-' * 50)
+
+        scores_dict1_logit = {}
+        for m,n in zip(models, model_str):
+            nontarget_cols = [x for x in cols if x != col] #Get all nontarget columns
+            nontarget_subcols = [x for x in sub_cols if x != sub_column]
+
+            scores_dict = {}
+            #print("Model: {}".format(n))
+            for i in b:
+                test = self.X.copy() #Refresh copy each subloop for each model
+                scores = [] #Empty
+                counter = 0 #Reset Counter for each subloop
+                #print("Changing Non-LoanGradeA's to Loan Grade A at {}".format(i))
+                while counter < 10:
+                    #Working on overarching Group
+                    idx_0s = test.index[test[col] == 0].tolist() #find all 0 indices
+                    idx_1s = test.index[test[col] == 1].tolist() #find all 1 indices
+                    idx = np.random.choice(idx_0s, int(len(idx_1s) *i), replace = True) #random select n indices from 0 indices (Sample of zero indices at i*size of 1's)
+
+
+                    test[col].iloc[idx,] = 1 #change n indices from 0 to 1
+                    #print('{} LoanGradeA'.format(test[col].sum()))
+
+                    for l in nontarget_cols:
+                        test[l].iloc[idx,] = 0 #change n indices from 1 to 0 if not target column
+                    #print('{} Non-LoanGradeA'.format(sum(test[nontarget_cols].sum())))
+
+
+                    test[sub_col].iloc[idx,] = 1 #change n indices from 0 to 1
+                    #print('{} LoanSubGradeA'.format(len(test.index[test[sub_col] == 1].tolist())))
+
+                    for o in nontarget_subcols:
+                        test[o].iloc[idx,] = 0 #change n indices from 1 to 0 if not target column
+                    #print('{} Non-LoanSubGradeA'.format(sum(test[nontarget_subcols].sum())))
+
+
+
+
+                    #print('-' * 50)
+
+                    try:
+                        scores.append(collections.Counter(m.predict(test))[1])
+                    except:
+                        scores.append(collections.Counter(m.predict_classes(test))[1])
+                    counter +=1
+                    test = self.X.copy()
+                scores_dict[i] = scores
+            scores_dict1_logit[n] = scores_dict
+
+        test_dict_df = pd.DataFrame()
+        for i in scores_dict1_logit.keys():
+            test_dict_df[i] = pd.DataFrame(scores_dict1_logit[i]).mean().values
+        test_dict_df = test_dict_df.T
+        #test_dict_df = test_dict_df / 2000
+        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %20 == 0]
+        return test_dict_df
+    def categorical_perturb_loangrade_overloaded_v2(self,column, grouping, subgrouping):
+        test = self.X.copy()
+
+        b = [(i / 100) for i in range(0, 101) if i %20 == 0] #Step by sample size: 0:100, 10
+
+        model_str = ['Random Forest', 'Gradient Boosted Classifier', 'Logistic Regression', 'Sklearn Neural Network',
+                 'Multilayer Perceptron']
+        models = [self.rfc, self.gbc, self.logit, self.sk_ann, self.keras_ann]
+
+        col = column #Get Target Column
+        cols = [i for i in self.X.columns if grouping in i] #Extract grouping cols
+
+        sub_cols = [i for i in self.X.columns if subgrouping in i] #Extract Sub-grouping cols
+
+
+        scores_dict1_logit = {}
+        for m,n in zip(models, model_str):
+            nontarget_cols = [x for x in cols if x != col] #Get all nontarget columns
+            scores_dict = {}
+            for i in b:
+                test = self.X.copy() #Refresh copy each subloop for each model
+                scores = [] #Empty
+                counter = 0 #Reset Counter for each subloop
+                while counter < 1:
+                    #Working on overarching Group
+                    idx_0s = test.index[test[col] == 0].tolist() #find all 0 indices
+                    idx_1s = test.index[test[col] == 1].tolist() #find all 1 indices
+                    idx = np.random.choice(idx_0s, int(len(idx_1s) *i), replace = False) #random select n indices from 0 indices (Sample of zero indices at i*size of 1's)
+
+
+                    test[col].iloc[idx,] = 1 #change n indices from 0 to 1
+                    for l in nontarget_cols:
+                        test[l].iloc[idx,] = 0 #change n indices from 1 to 0 if not target column
+
+                    dict_test = {}
+                    for i in idx:
+                        dict_test[i] = subgrouping + 'A' + sub_cols[np.where(np.array(test[sub_cols].iloc[i,] == 1))[0][0]][-1] #New Column flag for SubLoan
+
+                    for i in dict_test.keys(): #Loop through indices of random sample
+                        sub_column = dict_test[i] #Extract new Sub Solumn per iteration
+                        nontarget_subcols = [x for x in sub_cols if x != sub_column] #Find all new non-sub columns to zero out
+                        test[sub_column].iloc[i,] = 1 #Turn flag at index i new subcolumn on
+                        for o in nontarget_subcols: #Turn all other subcolumns off
+                            test[o].iloc[i,] = 0
+
+
+                    try:
+                        scores.append(collections.Counter(m.predict(test))[1])
+                    except:
+                        scores.append(collections.Counter(m.predict_classes(test))[1])
+                    counter +=1
+                    test = self.X.copy()
+                scores_dict[i] = scores
+            scores_dict1_logit[n] = scores_dict
+
+        test_dict_df = pd.DataFrame()
+        for i in scores_dict1_logit.keys():
+            test_dict_df[i] = pd.DataFrame(scores_dict1_logit[i]).mean().values
+        test_dict_df = test_dict_df.T
+        #test_dict_df = test_dict_df / 2000
+        test_dict_df.columns = [(i / 100) for i in range(0, 101) if i %20 == 0]
         return test_dict_df
