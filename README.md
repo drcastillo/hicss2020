@@ -1,6 +1,9 @@
 # hicss2020
 Repo for the work required for the HICSS conference.
 
+Latest Updates:
+- Added functionality to categorical perturbation (Perturbs sub_feature for Loan Grade)
+
 # Getting Started
 
 - 1:
